@@ -36,8 +36,9 @@ class TransferJobProps:
 
 def get_transfer_job(props: TransferJobProps):
     return {
-        'name': props.name,
+        'name': f'transferJobs/{props.name}',
         'project_id': props.project_id,
+        'status': TransferJob.Status.ENABLED,
         'transfer_spec': {
             'aws_s3_data_source': {
                 'bucket_name': props.source_bucket,
@@ -91,8 +92,8 @@ if __name__ == '__main__':
     props = TransferJobProps(
         name='test-sts-py-1',
         project_id='encode-dcc-1016',
-        source_bucket='s3://hic-files-transfer',
-        destination_bucket='gs://test-pulumi-bucket-58b2c6f',
+        source_bucket='hic-files-transfer',
+        destination_bucket='test-pulumi-bucket-58b2c6f',
         manifest_location=MANIFEST_LOCATION,
         aws_access_key=AWS_ACCESS_KEY_ID,
         aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
