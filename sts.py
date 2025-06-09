@@ -9,12 +9,11 @@ import requests
 from google.cloud.storage_transfer import StorageTransferServiceClient
 from google.cloud.storage_transfer import TransferJob
 
-from google.protobuf.timestamp_pb2 import Timestamp
+from datetime import date
 
 from google.oauth2 import service_account
 
 from dataclasses import dataclass
-
 
 
 AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
@@ -37,14 +36,17 @@ class TransferJobProps:
 
 
 def get_transfer_job(props: TransferJobProps):
-    now = Timestamp()
-    now.GetCurrentTime()
+    now = date.today()
     return {
         'name': f'transferJobs/{props.name}',
         'project_id': props.project_id,
         'status': TransferJob.Status.ENABLED,
         'schedule': {
-            'schedule_start_time': now,
+            'schedule_start_date': {
+                'year': now.year,
+                'month': now.month,
+                'day': now.day,
+            },
         },
         'transfer_spec': {
             'aws_s3_data_source': {
