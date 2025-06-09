@@ -9,6 +9,8 @@ import requests
 from google.cloud.storage_transfer import StorageTransferServiceClient
 from google.cloud.storage_transfer import TransferJob
 
+from google.protobuf.timestamp_pb2 import Timestamp
+
 from google.oauth2 import service_account
 
 from dataclasses import dataclass
@@ -35,10 +37,15 @@ class TransferJobProps:
 
 
 def get_transfer_job(props: TransferJobProps):
+    now = Timestamp()
+    now.GetCurrentTime()
     return {
         'name': f'transferJobs/{props.name}',
         'project_id': props.project_id,
         'status': TransferJob.Status.ENABLED,
+        'schedule': {
+            'schedule_start_time': now,
+        },
         'transfer_spec': {
             'aws_s3_data_source': {
                 'bucket_name': props.source_bucket,
@@ -64,17 +71,18 @@ def create_transfer_job(props: TransferJobProps):
             'transfer_job': transfer_job
         }
     )
-    print(response)
+    print('Created job', response)
 
 
 def wait_for_transfer_job(props: TransferJob):
     while True:
         job = props.client.get_transfer_job(
             {
-                'job_name': props.name,
+                'job_name': f'transferJobs/{props.name}',
                 'project_id': props.project_id
             }
         )
+        print('Waiting for job')
         print('Got job', job)
         if job.status == TransferJob.Status.SUCCESS:
             print('Transfer job completed successfully', props)
