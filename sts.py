@@ -9,7 +9,7 @@ import requests
 from google.cloud.storage_transfer import StorageTransferServiceClient
 from google.cloud.storage_transfer import TransferJob
 
-from datetime import date
+from datetime import datetime
 
 from google.oauth2 import service_account
 
@@ -33,19 +33,24 @@ class TransferJobProps:
     aws_access_key: str
     aws_secret_access_key: str
     client: StorageTransferServiceClient
+    now: datetime
+
+
+def generate_job_name(name: str, now: datetime):
+    dt = now.strftime("%Y-%m-%d-%H-%M-%S")
+    return f'transferJobs/{props.name}-{dt}'
 
 
 def get_transfer_job(props: TransferJobProps):
-    now = date.today()
     return {
-        'name': f'transferJobs/{props.name}',
+        'name': props.name,
         'project_id': props.project_id,
         'status': TransferJob.Status.ENABLED,
         'schedule': {
             'schedule_start_date': {
-                'year': now.year,
-                'month': now.month,
-                'day': now.day,
+                'year': props.now.year,
+                'month': props.now.month,
+                'day': props.now.day,
             },
         },
         'transfer_spec': {
@@ -80,7 +85,7 @@ def wait_for_transfer_job(props: TransferJob):
     while True:
         job = props.client.get_transfer_job(
             {
-                'job_name': f'transferJobs/{props.name}',
+                'job_name': props.name,
                 'project_id': props.project_id
             }
         )
@@ -99,8 +104,12 @@ def wait_for_transfer_job(props: TransferJob):
 
 if __name__ == '__main__':
     client = StorageTransferServiceClient()
+    now = datetime.now()
     props = TransferJobProps(
-        name='test-sts-py-1',
+        name=generate_job_name(
+            'test-sts-py',
+            now
+        ),
         project_id='encode-dcc-1016',
         source_bucket='hic-files-transfer',
         destination_bucket='test-pulumi-bucket-58b2c6f',
@@ -108,6 +117,7 @@ if __name__ == '__main__':
         aws_access_key=AWS_ACCESS_KEY_ID,
         aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
         client=client,
+        now=now,
     )
     create_transfer_job(props)
     wait_for_transfer_job(props)
