@@ -38,7 +38,7 @@ class TransferJobProps:
 
 def generate_job_name(name: str, now: datetime):
     dt = now.strftime("%Y-%m-%d-%H-%M-%S")
-    return f'transferJobs/{props.name}-{dt}'
+    return f'transferJobs/{name}-{dt}'
 
 
 def get_transfer_job(props: TransferJobProps):
