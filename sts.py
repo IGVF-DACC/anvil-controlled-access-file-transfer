@@ -111,19 +111,18 @@ def wait_for_transfer_job(props: TransferJob):
             print('Waiting for latest operation')
             time.sleep(10)
             continue
-        operation = MessageToDict(
-            props.client.get_operation(
-                {
-                    'name': job.latest_operation_name
-                }
-            )
+        operation = props.client.get_operation(
+            {
+                'name': job.latest_operation_name
+            }
         )
+        operation_json = MessageToDict(operation)
         print('Got operation', operation)
-        print(operation['metadata']['status'])
-        if operation['done'] is True:
+        print(operation_json['metadata']['status'])
+        if operation.done is True:
             print('Operation is done')
-            if operation['metadata']['status'] != 'SUCCESS':
-                print(props, operation)
+            if operation_json['metadata']['status'] != 'SUCCESS':
+                print(props, operation_json)
                 raise ValueError('Error in operation')
             break
         print('Job still running, waiting')
