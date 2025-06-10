@@ -99,7 +99,7 @@ def get_latest_operation(props: TransferJobProps):
 
 def wait_for_transfer_job(props: TransferJob):
     print('Waiting for job')
-    counter = -1
+    counter = 0
     while True:
         counter += 1
         job = props.client.get_transfer_job(
@@ -108,21 +108,21 @@ def wait_for_transfer_job(props: TransferJob):
                 'project_id': props.project_id
             }
         )
-        if counter == 0:
+        if counter <= 1:
             print('Got job', job)
         if not job.latest_operation_name:
             print('Waiting for latest operation')
             time.sleep(20)
             continue
-        if counter == 0:
-            print('Got operation', operation)
-            print(operation_json)
         operation = props.client.get_operation(
             {
                 'name': job.latest_operation_name
             }
         )
         operation_json = MessageToDict(operation)
+        if counter <= 1:
+            print('Got operation', operation)
+            print(operation_json)
         if operation.done is True:
             print('Operation is done', operation)
             print(operation_json)
