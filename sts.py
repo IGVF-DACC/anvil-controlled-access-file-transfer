@@ -105,7 +105,7 @@ def wait_for_transfer_job(props: TransferJob):
         )
         print('Waiting for job')
         print('Got job', job)
-        operation = get_operation(
+        operation = props.client.get_operation(
             {
                 'name': job.latest_operation_name
             }
