@@ -107,6 +107,10 @@ def wait_for_transfer_job(props: TransferJob):
         )
         print('Waiting for job')
         print('Got job', job)
+        if not job.latest_operation_name:
+            print('Waiting for latest operation')
+            time.sleep(10)
+            continue
         operation = MessageToDict(
             props.client.get_operation(
                 {
