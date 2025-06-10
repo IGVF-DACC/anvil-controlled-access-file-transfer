@@ -78,7 +78,21 @@ def create_transfer_job(props: TransferJobProps):
             'transfer_job': transfer_job
         }
     )
-    print('Created job', response)
+    print('Created job named', props.name, response)
+
+
+def get_latest_operation(props: TransferJobProps):
+    operation_name = props.client.get_transfer_job(
+        {
+            'job_name': props.name,
+            'project_id': props.project_id
+        }
+    ).latest_operation_name
+    return props.get_operation(
+        {
+            'name': latest_operation_name
+        }
+    )
 
 
 def wait_for_transfer_job(props: TransferJob):
@@ -91,15 +105,21 @@ def wait_for_transfer_job(props: TransferJob):
         )
         print('Waiting for job')
         print('Got job', job)
-        if job.status == TransferJob.Status.SUCCESS:
-            print('Transfer job completed successfully', props)
+        operation = get_operation(
+            {
+                'name': job.latest_operation_name
+            }
+        )
+        print('Got operation', operation)
+        if operation.done is True:
+            print('Operation is done')
+            value = str(operation.metadata.value).lower()
+            if 'fail' in value or 'error' in value:
+                print(props, operation)
+                raise ValueError('Error in operation')
             break
-        elif job.status == TransferJob.Status.FAILED:
-            print('Transfer job failed')
-            raise ValueError('Transfer job failed', props)
         print('Job still running, waiting')
         time.sleep(30)
-
 
 
 if __name__ == '__main__':
