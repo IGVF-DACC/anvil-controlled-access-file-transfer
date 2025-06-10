@@ -119,7 +119,7 @@ def wait_for_transfer_job(props: TransferJob):
             )
         )
         print('Got operation', operation)
-        print(MessageToDict(operation)['metadata']['status'])
+        print(operation['metadata']['status'])
         if operation['done'] is True:
             print('Operation is done')
             if operation['metadata']['status'] != 'SUCCESS':
