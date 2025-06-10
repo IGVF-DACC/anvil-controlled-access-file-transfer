@@ -9,6 +9,8 @@ import requests
 from google.cloud.storage_transfer import StorageTransferServiceClient
 from google.cloud.storage_transfer import TransferJob
 
+from google.protobuf.json_format import MessageToDict
+
 from datetime import datetime
 
 from google.oauth2 import service_account
@@ -105,16 +107,18 @@ def wait_for_transfer_job(props: TransferJob):
         )
         print('Waiting for job')
         print('Got job', job)
-        operation = props.client.get_operation(
-            {
-                'name': job.latest_operation_name
-            }
+        operation = MessageToDict(
+            props.client.get_operation(
+                {
+                    'name': job.latest_operation_name
+                }
+            )
         )
         print('Got operation', operation)
-        if operation.done is True:
+        print(MessageToDict(operation)['metadata']['status'])
+        if operation['done'] is True:
             print('Operation is done')
-            value = str(operation.metadata.value).lower()
-            if 'fail' in value or 'error' in value:
+            if operation['metadata']['status'] != 'SUCCESS':
                 print(props, operation)
                 raise ValueError('Error in operation')
             break
