@@ -84,55 +84,39 @@ def create_transfer_job(props: TransferJobProps):
 
 
 def get_latest_operation(props: TransferJobProps):
-    operation_name = props.client.get_transfer_job(
-        {
-            'job_name': props.name,
-            'project_id': props.project_id
-        }
-    ).latest_operation_name
-    return props.get_operation(
-        {
-            'name': latest_operation_name
-        }
-    )
-
-
-def wait_for_transfer_job(props: TransferJob):
-    print('Waiting for job')
-    counter = 0
     while True:
-        counter += 1
         job = props.client.get_transfer_job(
             {
                 'job_name': props.name,
                 'project_id': props.project_id
             }
         )
-        if counter <= 1:
-            print('Got job', job)
+        print('got job', job)
         if not job.latest_operation_name:
-            print('Waiting for latest operation')
-            time.sleep(20)
-            continue
-        operation = props.client.get_operation(
-            {
-                'name': job.latest_operation_name
-            }
-        )
+            print('Waiting for operation')
+            time.sleep(5)
+        else:
+            break
+    return props.client.get_operation(
+        {
+            'name': job.latest_operation_name
+        }
+    )
+
+
+def wait_for_transfer_job(props: TransferJob):
+    print('Waiting for job')
+    while True:
+        operation = get_latest_operation(props)
         operation_json = MessageToDict(operation)
-        if counter <= 1:
-            print('Got operation', operation)
-            print(operation_json)
+        print('Got operation', operation, operation_json)
         if operation.done is True:
-            print('Operation is done', operation)
-            print(operation_json)
+            print('Operation is done', operation, operation_json, props)
             if operation_json['metadata']['status'] != 'SUCCESS':
-                print(props, operation_json)
                 raise ValueError('Error in operation')
             break
-        if counter % 50 == 0:
-            print('Job still running, waiting')
-            print(counter, operation_json['metadata']['status'])
+        print('Job still running, waiting')
+        print(operation_json['metadata']['status'])
         time.sleep(60)
 
 
