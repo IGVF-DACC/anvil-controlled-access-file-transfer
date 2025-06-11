@@ -145,7 +145,7 @@ def wait_for_transfer_job(props: TransferJob):
                 raise ValueError('Error in operation')
             logger.info('Operation completed successfully')
             break
-        logger.info(f'Job still running. Status: {status}')
+        logger.info(f'Job still running. Status: {operation_json["metadata"]["status"]}')
         time.sleep(props.sleep_time_seconds)
 
 
