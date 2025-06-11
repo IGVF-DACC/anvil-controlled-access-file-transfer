@@ -83,6 +83,11 @@ def get_transfer_job(props: TransferJobProps):
                 'month': props.now.month,
                 'day': props.now.day,
             },
+            'schedule_end_date': {
+                'year': props.now.year,
+                'month': props.now.month,
+                'day': props.now.day,
+            },
         },
         'transfer_spec': {
             'aws_s3_data_source': {
