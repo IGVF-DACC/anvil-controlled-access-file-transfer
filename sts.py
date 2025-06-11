@@ -19,14 +19,32 @@ from dataclasses import dataclass
 
 import logging
 
+import argparse
+
+
+parser = argparse.ArgumentParser()
+
+parser.add_argument(
+    '--log-level',
+    default='INFO',
+    choices=[
+        'DEBUG',
+        'INFO',
+        'WARNING',
+        'ERROR',
+        'CRITICAL'
+    ],
+    help='Set the logging level'
+)
+
+args = parser.parse_args()
 
 logging.basicConfig(
-    level=logging.INFO,
+    level=args.log_level,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 
 logger = logging.getLogger(__name__)
-
 
 AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
 
