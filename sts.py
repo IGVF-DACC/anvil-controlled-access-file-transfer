@@ -17,6 +17,16 @@ from google.oauth2 import service_account
 
 from dataclasses import dataclass
 
+import logging
+
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
+logger = logging.getLogger(__name__)
+
 
 AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
 
@@ -36,6 +46,7 @@ class TransferJobProps:
     aws_secret_access_key: str
     client: StorageTransferServiceClient
     now: datetime
+    sleep_time_seconds: int
 
 
 def generate_job_name(name: str, now: datetime):
@@ -80,7 +91,7 @@ def create_transfer_job(props: TransferJobProps):
             'transfer_job': transfer_job
         }
     )
-    print('Created job named', props.name, response)
+    logger.info(f'Created job named {props.name}. Response: {response}')
 
 
 def get_latest_operation(props: TransferJobProps):
@@ -91,7 +102,7 @@ def get_latest_operation(props: TransferJobProps):
                 'project_id': props.project_id
             }
         )
-        print('got job', job)
+        logger.debug(f'Got job: {job}')
         if not job.latest_operation_name:
             print('Waiting for operation')
             time.sleep(5)
@@ -105,19 +116,19 @@ def get_latest_operation(props: TransferJobProps):
 
 
 def wait_for_transfer_job(props: TransferJob):
-    print('Waiting for job')
+    logger.info('Waiting for job to complete')
     while True:
         operation = get_latest_operation(props)
         operation_json = MessageToDict(operation)
-        print('Got operation', operation, operation_json)
+        logger.debug(f'Got operation: {operation_json}')
         if operation.done is True:
-            print('Operation is done', operation, operation_json, props)
             if operation_json['metadata']['status'] != 'SUCCESS':
+                logger.error(f'Operation failed: {operation_json} {props} {operation}')
                 raise ValueError('Error in operation')
+            logger.info('Operation completed successfully')
             break
-        print('Job still running, waiting')
-        print(operation_json['metadata']['status'])
-        time.sleep(60)
+        logger.info(f'Job still running. Status: {status}')
+        time.sleep(props.sleep_time_seconds)
 
 
 if __name__ == '__main__':
@@ -136,6 +147,7 @@ if __name__ == '__main__':
         aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
         client=client,
         now=now,
+        sleep_time_seconds=120,
     )
     create_transfer_job(props)
     wait_for_transfer_job(props)
