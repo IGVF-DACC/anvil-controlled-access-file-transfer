@@ -52,6 +52,8 @@ AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
 
 MANIFEST_LOCATION = 'gs://test-pulumi-bucket-58b2c6f/fm1.tsv'
 
+MANIFEST_BUCKET = 'test-pulumi-bucket-58b2c6f'
+
 
 @dataclass
 class TransferJobProps:
@@ -59,7 +61,7 @@ class TransferJobProps:
     project_id: str
     source_bucket: str
     destination_bucket: str
-    manifest_location: str
+    manifest_bucket: str
     aws_access_key: str
     aws_secret_access_key: str
     client: StorageTransferServiceClient
@@ -67,14 +69,14 @@ class TransferJobProps:
     sleep_time_seconds: int
 
 
-def generate_job_name(name: str, now: datetime):
+def generate_name(name: str, source_bucket: str, now: datetime):
     dt = now.strftime("%Y-%m-%d-%H-%M-%S")
-    return f'transferJobs/{name}-{dt}'
+    return f'{name}-{source_bucket}-{dt}'
 
 
 def get_transfer_job(props: TransferJobProps):
     return {
-        'name': props.name,
+        'name': f'transferJobs/{props.name}',
         'project_id': props.project_id,
         'status': TransferJob.Status.ENABLED,
         'schedule': {
@@ -101,13 +103,13 @@ def get_transfer_job(props: TransferJobProps):
                 'bucket_name': props.destination_bucket,
             },
             'transfer_manifest': {
-                'location': props.manifest_location,
+                'location': f'gs://{props.manifest_bucket}/{props.name}'
             }
         }
     }
 
 
-def create_transfer_job(props: TransferJobProps):
+def create_transfer_job(props: TransferJobProps) -> Job:
     transfer_job = get_transfer_job(props)
     response = props.client.create_transfer_job(
         {
@@ -121,7 +123,7 @@ def get_latest_operation(props: TransferJobProps):
     while True:
         job = props.client.get_transfer_job(
             {
-                'job_name': props.name,
+                'job_name': f'transferJobs/{props.name}',
                 'project_id': props.project_id
             }
         )
@@ -154,18 +156,30 @@ def wait_for_transfer_job(props: TransferJob):
         time.sleep(props.sleep_time_seconds)
 
 
+def copy_sts_manifest_to_bucket(tsv: str, props: TransferJob):
+    pass
+
+
 if __name__ == '__main__':
     client = StorageTransferServiceClient()
     now = datetime.now()
+    # Generate metadata
+    # Generate files_to_move tsvs, grouped by source bucket
+    # Put file tsv manifests in Google bucket (named by job name, source_bucket, date)
+    # For each source bucket, launchs jobs
+    # For each each job, monitor until all successful
+    # Upload metadata tables
+    source_bucket = 'hic-files-transfer'
     props = TransferJobProps(
-        name=generate_job_name(
+        name=generate_name(
             'test-sts-py',
+            source_bucket,
             now
         ),
         project_id='encode-dcc-1016',
-        source_bucket='hic-files-transfer',
+        source_bucket=source_bucket,
         destination_bucket='test-pulumi-bucket-58b2c6f',
-        manifest_location=MANIFEST_LOCATION,
+        manifest_bucket=MANIFEST_BUCKET,
         aws_access_key=AWS_ACCESS_KEY_ID,
         aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
         client=client,
