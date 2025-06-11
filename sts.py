@@ -109,7 +109,7 @@ def get_transfer_job(props: TransferJobProps):
     }
 
 
-def create_transfer_job(props: TransferJobProps) -> Job:
+def create_transfer_job(props: TransferJobProps):
     transfer_job = get_transfer_job(props)
     response = props.client.create_transfer_job(
         {
