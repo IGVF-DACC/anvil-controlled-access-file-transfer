@@ -6,6 +6,8 @@ from typing import Dict, List, Set
 
 import requests
 
+from google.cloud.storage import Client as StorageClient
+
 from google.cloud.storage_transfer import StorageTransferServiceClient
 from google.cloud.storage_transfer import TransferJob
 
@@ -64,7 +66,8 @@ class TransferJobProps:
     manifest_bucket: str
     aws_access_key: str
     aws_secret_access_key: str
-    client: StorageTransferServiceClient
+    sts_client: StorageTransferServiceClient
+    storage_client: StorageClient
     now: datetime
     sleep_time_seconds: int
 
@@ -111,7 +114,7 @@ def get_transfer_job(props: TransferJobProps):
 
 def create_transfer_job(props: TransferJobProps):
     transfer_job = get_transfer_job(props)
-    response = props.client.create_transfer_job(
+    response = props.sts_client.create_transfer_job(
         {
             'transfer_job': transfer_job
         }
@@ -121,7 +124,7 @@ def create_transfer_job(props: TransferJobProps):
 
 def get_latest_operation(props: TransferJobProps):
     while True:
-        job = props.client.get_transfer_job(
+        job = props.sts_client.get_transfer_job(
             {
                 'job_name': f'transferJobs/{props.name}',
                 'project_id': props.project_id
@@ -133,7 +136,7 @@ def get_latest_operation(props: TransferJobProps):
             time.sleep(5)
         else:
             break
-    return props.client.get_operation(
+    return props.sts_client.get_operation(
         {
             'name': job.latest_operation_name
         }
@@ -156,12 +159,18 @@ def wait_for_transfer_job(props: TransferJob):
         time.sleep(props.sleep_time_seconds)
 
 
-def copy_sts_manifest_to_bucket(tsv: str, props: TransferJob):
-    pass
+def upload_tsv_to_bucket(tsv: str, bucket: str, path: str, props: TransferJob):
+    bucket = props.storage_client.bucket(bucket)
+    blob = bucket.blob(path)
+    blob.upload_from_string(
+        tsv,
+        content_type='text/tab-separated-values'
+    )
 
 
 if __name__ == '__main__':
-    client = StorageTransferServiceClient()
+    sts_client = StorageTransferServiceClient()
+    storage_client = StorageClient()
     now = datetime.now()
     # Generate metadata
     # Generate files_to_move tsvs, grouped by source bucket
@@ -182,9 +191,17 @@ if __name__ == '__main__':
         manifest_bucket=MANIFEST_BUCKET,
         aws_access_key=AWS_ACCESS_KEY_ID,
         aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-        client=client,
+        sts_client=sts_client,
+        storage_client=storage_client,
         now=now,
         sleep_time_seconds=120,
+    )
+    tsv = 'ENCFF053BBK.fastq.gz\nENCFF110XAL.fastq.gz'
+    upload_tsv_to_bucket(
+        tsv,
+        MANIFEST_BUCKET,
+        props.name,
+        props
     )
     create_transfer_job(props)
     wait_for_transfer_job(props)
