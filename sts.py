@@ -160,6 +160,7 @@ def wait_for_transfer_job(props: TransferJob):
 
 
 def upload_tsv_to_bucket(tsv: str, bucket: str, path: str, props: TransferJob):
+    logger.info(f'Uploading STS manifest to gs://{bucket}/{path}')
     bucket = props.storage_client.bucket(bucket)
     blob = bucket.blob(path)
     blob.upload_from_string(
