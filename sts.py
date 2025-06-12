@@ -192,7 +192,7 @@ def upload_data_tables(session, data_tables, workspace_namespace, workspace_name
         for name, tsv in data_tables.items():
             logger.info(f'Deleting {name} TSV from {workspace_namespace}/{workspace_name}')
             delete_table_named(
-                get_name_from_tsv(name),
+                get_name_from_tsv(tsv),
                 workspace_namespace,
                 workspace_name,
                 session,

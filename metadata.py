@@ -145,7 +145,7 @@ def get_name_from_tsv(tsv):
 def delete_table_named(name, workspace_namespace, workspace_name, session):
     delete_url = f'https://api.firecloud.org/api/workspaces/{workspace_namespace}/{workspace_name}/entityTypes/{name}'
     response = session.delete(delete_url)
-    logger.info(f'Delete response: {response.text}')
+    logger.info(f'Delete response {response.status_code} {response.text}')
 
 
 def post_tsv_from_memory(session, workspace_namespace, workspace_name, in_memory_tsv):
@@ -161,7 +161,7 @@ def post_tsv_from_memory(session, workspace_namespace, workspace_name, in_memory
             ),
         }
     )
-    logger.info(f'Post response: {response.text}')
+    logger.info(f'Post response {response.status_code} {response.text}')
 
 
 def print_summary(files_seen, file_sets_seen, samples_seen, donors_seen, full=False):
