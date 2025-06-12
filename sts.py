@@ -26,6 +26,7 @@ import argparse
 from metadata import collect_metadata
 from metadata import MetadataProps
 from metadata import make_sts_manifests_from_metadata
+from metadata import make_data_tables
 
 parser = argparse.ArgumentParser()
 
@@ -243,10 +244,16 @@ if __name__ == '__main__':
         transfer_job_props.append(
             props
         )
-        upload_tsv_to_bucket(
-            tsv,
-            props
-        )
+        #upload_tsv_to_bucket(
+        #    tsv,
+        #    props
+        #)
+        # create_transfer_job(props)
+        # wait_for_transfer_job(props)
+    data_tables = make_data_tables(
+        metadata,
+        config['destination_bucket'],
+    )
     print(manifests)
     '''
     # Generate metadata

@@ -1,6 +1,12 @@
 import json
 
+import csv
+
 import requests
+
+import logging
+
+from io import StringIO
 
 from dataclasses import dataclass
 
@@ -9,46 +15,44 @@ from typing import Callable, Any, Dict, Tuple
 from google.auth import compute_engine
 from google.auth.transport.requests import AuthorizedSession
 
-import logging
+
 
 logger = logging.getLogger(__name__)
 
 
 FILE_FIELDS = [
     '@id',
-    '@type',
-    'accession',
+    'type',
+    'summary',
     'assay_titles',
+    'file_format',
+    'file_format_type',
+    'file_size',
+    'md5sum',
+    'file_set',
     'assembly',
     'base_modifications',
     'cell_type_annotation',
     'content_summary',
     'content_type',
     'derived_from',
-    'file_format',
-    'file_format_type',
-    'file_set',
-    'file_size',
     'flowcell_id',
     'illumina_read_type',
     'lane',
-    'md5sum',
     'mean_read_length',
     'seqspecs',
     'sequencing_kit',
     'sequencing_platform',
     'sequencing_run',
     'seqspec_of',
-    'summary',
     'transcriptome_annotation',
     'workflow',
-    's3_uri',
 ]
 
 
 FILESET_FIELDS = [
     '@id',
-    '@type',
+    'type',
     'accession',
     'assay_term',
     'assay_titles',
@@ -286,4 +290,53 @@ def make_sts_manifests_from_metadata(metadata: Dict[str, Any], props: MetadataPr
     return {
         k: '\n'.join(v)
         for k, v in grouped_by_bucket.items()
+    }
+
+
+def make_gs_file_path_from_s3_uri(destination_bucket: str, s3_uri: str) -> str:
+    _, path = parse_s3_uri_into_bucket_and_path(s3_uri)
+    return f'gs://{destination_bucket}/{path}'
+
+
+def serialize_cell(value):
+    if isinstance(value, (list, dict)):
+        return json.dumps(value)
+    if isinstance(value, (int, float)):
+        return str(int)
+    return value
+
+
+def make_data_tables(metadata: Dict[str, Any], destination_bucket: str) -> Dict[str, Any]:
+    files_tsv = ''
+    file_sets_tsv = ''
+    samples_tsv = ''
+    donors_tsv = ''
+    file_headers = ['file_id', 'file_path'] + FILE_FIELDS
+    files_tsv += '\t'.join(file_headers)
+    for f in metadata['seen']['files']:
+        full_file = metadata['local']['files'][f]
+        row = [
+            full_file['accession'],
+            make_gs_file_path_from_s3_uri(
+                destination_bucket,
+                full_file['s3_uri']
+            )
+        ]
+        for field in FILE_FIELDS:
+            if field == 'type':
+                row.append(full_file['@type'][0])
+            else:
+                row.append(
+                    serialize_cell(
+                        full_file.get(field, '')
+                    )
+                )
+        files_tsv += '\n'.join(row)
+    print(files_tsv)
+    
+    return {
+        'files': '',
+        'file_sets': '',
+        'samples': '',
+        'donors': '',
     }
