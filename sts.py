@@ -219,7 +219,7 @@ context = {
         'sleep_time_seconds': 120,
         'workspace_namespace': 'DACC_ANVIL',
         'workspace_name': 'IGVF AnVIL Sandbox',
-        'overwrite_tsvs': False,
+        'overwrite_tsvs': True,
     }
 }
 

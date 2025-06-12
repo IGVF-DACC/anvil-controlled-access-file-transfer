@@ -20,6 +20,17 @@ from google.auth.transport.requests import AuthorizedSession
 logger = logging.getLogger(__name__)
 
 
+AT_ID_LINKS = [
+    'seqspecs',
+    'derived_from',
+    'file_set',
+    'files',
+    'input_file_sets',
+    'samples',
+    'donors',
+]
+
+
 FILE_FIELDS = [
     'type',
     'summary',
@@ -53,6 +64,7 @@ FILE_SET_FIELDS = [
     'type',
     'assay_term',
     'assay_titles',
+    'files',
     'associated_phenotypes',
     'auxiliary_sets',
     'average_guide_coverage',
@@ -301,12 +313,39 @@ def serialize_cell(value):
     return value
 
 
+def parse_accession_from_at_ids(at_ids) -> list[str]:
+    return [
+        at_id.split('/')[2]
+        for at_id in at_ids
+    ]
+
+
 def add_fields_to_row(item, fields, row):
     for field in fields:
         if field == 'type':
             row.append(item['@type'][0])
         elif field == 'id':
             row.append(item['@id'])
+        elif field in AT_ID_LINKS:
+            value = item.get(field, '')
+            if not value:
+                row.append(value)
+            elif isinstance(value, str):
+                row.append(
+                    parse_accession_from_at_ids(
+                        [
+                            value
+                        ]
+                    )[0]
+                )
+            else:
+                row.append(
+                    serialize_cell(
+                        parse_accession_from_at_ids(
+                            value
+                        )
+                    )
+                )
         else:
             row.append(
                 serialize_cell(
