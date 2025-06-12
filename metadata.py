@@ -21,7 +21,6 @@ logger = logging.getLogger(__name__)
 
 
 FILE_FIELDS = [
-    '@id',
     'type',
     'summary',
     'assay_titles',
@@ -51,7 +50,6 @@ FILE_FIELDS = [
 
 
 FILE_SET_FIELDS = [
-    '@id',
     'type',
     'assay_term',
     'assay_titles',
@@ -82,7 +80,7 @@ FILE_SET_FIELDS = [
 
 
 SAMPLE_FIELDS = [
-    '@id',
+    'type',
     'summary',
     'sample_terms',
     'modifications',
@@ -103,7 +101,7 @@ SAMPLE_FIELDS = [
 
 
 DONOR_FIELDS = [
-    '@id',
+    'type',
     'ethnicities',
     'phenotypic_features',
     'sex',
@@ -307,6 +305,8 @@ def add_fields_to_row(item, fields, row):
     for field in fields:
         if field == 'type':
             row.append(item['@type'][0])
+        elif field == 'id':
+            row.append(item['@id'])
         else:
             row.append(
                 serialize_cell(

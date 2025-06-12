@@ -270,7 +270,7 @@ if __name__ == '__main__':
         metadata,
         config['destination_bucket'],
     )
-    '''
+'''
     upload_data_tables(
         session,
         data_tables,
