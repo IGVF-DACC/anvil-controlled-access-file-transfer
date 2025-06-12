@@ -4,7 +4,7 @@ import requests
 
 from dataclasses import dataclass
 
-from typing import Callable, Any, Dict
+from typing import Callable, Any, Dict, Tuple
 
 from google.auth import compute_engine
 from google.auth.transport.requests import AuthorizedSession
@@ -115,8 +115,6 @@ class MetadataProps:
     portal_url: str
     dul: str
     initial_files_query: str
-    workspace_namespace: str
-    workspace_name: str
 
 
 def get_session():
@@ -192,7 +190,9 @@ def collect_metadata(props: MetadataProps) -> Dict[str, Any]:
     donors_local = {}
     file_sets_seen = set()
     file_sets_local = {}
-    files = requests.get(files_url).json()['@graph']
+    files = requests.get(
+        props.initial_files_query
+    ).json()['@graph']
     for f in files:
         files_local[f['@id']] = f
         files_seen.add(f['@id'])
@@ -200,11 +200,7 @@ def collect_metadata(props: MetadataProps) -> Dict[str, Any]:
         f['file_set']
         for f in files
     }
-    print(
-        file_sets,
-        len(file_sets),
-        len(files)
-    )
+    print(f'Found {len(files)} files and {len(file_sets)} file_sets')
     while file_sets:
         fs = file_sets.pop()
         if fs in file_sets_seen:
@@ -213,8 +209,8 @@ def collect_metadata(props: MetadataProps) -> Dict[str, Any]:
         full_fs = requests.get(props.portal_url + fs + '@@object').json()
         file_sets_local[fs] = full_fs
         if 'input_file_sets' in full_fs:
+            print('Getting file_sets')
             for ifs in full_fs['input_file_sets']:
-                print('Found input file set')
                 if ifs not in file_sets_seen:
                     file_sets.add(ifs)
         if 'files' in full_fs:
@@ -265,18 +261,29 @@ def collect_metadata(props: MetadataProps) -> Dict[str, Any]:
     return metadata
 
 
-HMB_MDS_METDATA_PROPS = MetadataProps(
-    portal_url='https://api.data.igvf.org',
-    dul='HMB-MDS',
-    initial_files_query=(
-        'https://api.data.igvf.org/search/'
-        '?type=File'
-        '&file_set.data_use_limitation_summaries=HMB-MDS'
-        '&file_set.controlled_access=true'
-        '&status=released'
-        '&frame=object'
-        '&limit=all'
-    ),
-    workspace_namespace='DACC_ANVIL',
-    workspace_name='IGVF AnVIL Sandbox'
-)
+def parse_s3_uri_into_bucket_and_path(s3_uri: str) -> Tuple[str, str]:
+    return tuple(s3_uri.split('s3://')[1].split('/', 1))
+
+
+def make_sts_manifests_from_metadata(metadata: Dict[str, Any], props: MetadataProps) -> Dict[str, Any]:
+    s3_uris = list(
+        sorted(
+            {
+                parse_s3_uri_into_bucket_and_path(
+                    metadata['local']['files'][f]['s3_uri']
+                )
+                for f in metadata['seen']['files']
+            }
+        )
+    )
+    grouped_by_bucket = {}
+    for bucket, path in s3_uris:
+        if bucket not in grouped_by_bucket:
+            grouped_by_bucket[bucket] = []
+        grouped_by_bucket[bucket].append(path)
+    for bucket, paths in grouped_by_bucket.items():
+        print(f'Bucket {bucket} has {len(paths)} files')
+    return {
+        k: '\n'.join(v)
+        for k, v in grouped_by_bucket.items()
+    }

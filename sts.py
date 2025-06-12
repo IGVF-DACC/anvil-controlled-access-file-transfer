@@ -23,6 +23,9 @@ import logging
 
 import argparse
 
+from metadata import collect_metadata
+from metadata import MetadataProps
+from metadata import make_sts_manifests_from_metadata
 
 parser = argparse.ArgumentParser()
 
@@ -39,6 +42,16 @@ parser.add_argument(
     help='Set the logging level'
 )
 
+parser.add_argument(
+    '--dul',
+    required=True,
+    choices=[
+        'HMB-MDS',
+        'GRU',
+    ],
+    help='Set the data use limitation code'
+)
+
 args = parser.parse_args()
 
 logging.basicConfig(
@@ -48,13 +61,13 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-AWS_ACCESS_KEY_ID = os.environ['AWS_ACCESS_KEY_ID']
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
 
-AWS_SECRET_ACCESS_KEY = os.environ['AWS_SECRET_ACCESS_KEY']
-
-MANIFEST_LOCATION = 'gs://test-pulumi-bucket-58b2c6f/fm1.tsv'
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
 
 MANIFEST_BUCKET = 'test-pulumi-bucket-58b2c6f'
+
+PROJECT_ID = 'encode-dcc-1016'
 
 
 @dataclass
@@ -106,7 +119,7 @@ def get_transfer_job(props: TransferJobProps):
                 'bucket_name': props.destination_bucket,
             },
             'transfer_manifest': {
-                'location': f'gs://{props.manifest_bucket}/{props.name}'
+                'location': f'gs://{props.manifest_bucket}/{props.name}.tsv'
             }
         }
     }
@@ -159,31 +172,90 @@ def wait_for_transfer_job(props: TransferJob):
         time.sleep(props.sleep_time_seconds)
 
 
-def upload_tsv_to_bucket(tsv: str, bucket: str, path: str, props: TransferJob):
-    logger.info(f'Uploading STS manifest to gs://{bucket}/{path}')
+def upload_tsv_to_bucket(tsv: str, props: TransferJob):
+    logger.info(f'Uploading STS manifest to gs://{props.manifest_bucket}/{path}.tsv')
     bucket = props.storage_client.bucket(bucket)
-    blob = bucket.blob(path)
+    blob = bucket.blob(props.name + '.tsv')
     blob.upload_from_string(
         tsv,
         content_type='text/tab-separated-values'
     )
 
 
+context = {
+    'HMB-MDS': {
+        'metadata_props': MetadataProps(
+            portal_url='https://api.data.igvf.org',
+            dul='HMB-MDS',
+            initial_files_query=(
+                'https://api.data.igvf.org/search/'
+                '?type=File'
+                '&file_set.data_use_limitation_summaries=HMB-MDS'
+                '&file_set.controlled_access=true'
+                '&status=released'
+                '&frame=object'
+                '&limit=all'
+            )
+        ),
+        'name': 'igvf-anvil-hmb-mds',
+        'project_id': PROJECT_ID,
+        'manifest_bucket': MANIFEST_BUCKET,
+        'destination_bucket': 'test-pulumi-bucket-58b2c6f',
+        'workspace_namespace': 'DACC_ANVIL',
+        'workspace_name': 'IGVF AnVIL Sandbox',
+        'sleep_time_seconds': 120,
+    }
+}
+
+
 if __name__ == '__main__':
-    from metadata import collect_metadata
-    from metadata import HMB_MDS_METDATA_PROPS
-    metadata = collect_metadata(HMB_MDS_METDATA_PROPS)
-    '''
     sts_client = StorageTransferServiceClient()
     storage_client = StorageClient()
+    config = context[args.dul]
+    metadata_props = config['metadata_props']
+    metadata = collect_metadata(
+        metadata_props
+    )
+    manifests = make_sts_manifests_from_metadata(
+        metadata,
+        metadata_props
+    )
     now = datetime.now()
+    transfer_job_props = []
+    for source_bucket, tsv in manifests.items():
+        props = TransferJobProps(
+            name=generate_name(
+                config['name'],
+                source_bucket,
+                now
+            ),
+            project_id=config['project_id'],
+            source_bucket=source_bucket,
+            destination_bucket=config['destination_bucket'],
+            manifest_bucket=config['manifest_bucket'],
+            aws_access_key=AWS_ACCESS_KEY_ID,
+            aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+            sts_client=sts_client,
+            storage_client=storage_client,
+            now=now,
+            sleep_time_seconds=config['sleep_time_seconds'],
+        )
+        transfer_job_props.append(
+            props
+        )
+        upload_tsv_to_bucket(
+            tsv,
+            props
+        )
+    print(manifests)
+    '''
     # Generate metadata
     # Generate files_to_move tsvs, grouped by source bucket
     # Put file tsv manifests in Google bucket (named by job name, source_bucket, date)
     # For each source bucket, launchs jobs
     # For each each job, monitor until all successful
     # Upload metadata tables
-    source_bucket = 'hic-files-transfer'
+    source_bucket =
     props = TransferJobProps(
         name=generate_name(
             'test-sts-py',
