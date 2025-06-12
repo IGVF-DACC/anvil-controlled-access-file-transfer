@@ -170,6 +170,10 @@ def upload_tsv_to_bucket(tsv: str, bucket: str, path: str, props: TransferJob):
 
 
 if __name__ == '__main__':
+    from metadata import collect_metadata
+    from metadata import HMB_MDS_METDATA_PROPS
+    metadata = collect_metadata(HMB_MDS_METDATA_PROPS)
+    '''
     sts_client = StorageTransferServiceClient()
     storage_client = StorageClient()
     now = datetime.now()
@@ -206,3 +210,4 @@ if __name__ == '__main__':
     )
     create_transfer_job(props)
     wait_for_transfer_job(props)
+    '''
