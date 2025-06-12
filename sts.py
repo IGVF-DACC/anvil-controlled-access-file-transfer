@@ -195,6 +195,7 @@ def upload_data_tables(session, data_tables, workspace_namespace, workspace_name
             tsv,
             overwrite_tsvs,
         )
+        time.sleep(1)
 
 
 context = {
@@ -219,7 +220,7 @@ context = {
         'sleep_time_seconds': 120,
         'workspace_namespace': 'DACC_ANVIL',
         'workspace_name': 'IGVF AnVIL Sandbox',
-        'overwrite_tsvs': True,
+        'overwrite_tsvs': False,
     }
 }
 
