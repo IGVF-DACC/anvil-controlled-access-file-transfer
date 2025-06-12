@@ -21,37 +21,36 @@ logger = logging.getLogger(__name__)
 
 
 FILE_FIELDS = [
-    '@id',
+    'accession',
     'type',
     'summary',
     'assay_titles',
+    'content_type',
     'file_format',
     'file_format_type',
     'file_size',
     'md5sum',
+    'content_summary',
     'file_set',
+    'seqspecs',
+    'seqspec_of'
+    'workflow',
+    'derived_from',
     'assembly',
     'base_modifications',
     'cell_type_annotation',
-    'content_summary',
-    'content_type',
-    'derived_from',
     'flowcell_id',
     'illumina_read_type',
     'lane',
     'mean_read_length',
-    'seqspecs',
     'sequencing_kit',
     'sequencing_platform',
     'sequencing_run',
-    'seqspec_of',
     'transcriptome_annotation',
-    'workflow',
 ]
 
 
-FILESET_FIELDS = [
-    '@id',
+FILE_SET_FIELDS = [
     'type',
     'accession',
     'assay_term',
@@ -82,30 +81,28 @@ FILESET_FIELDS = [
 ]
 
 
-SAMPLE_FIElDS = [
-    '@id',
-    'accession'
-    'age_units',
-    'biosample_qualifiers',
-    'classifications',
-    'construct_library_sets',
-    'donors',
-    'embryonic',
-    'lower_bound_age',
+SAMPLE_FIELDS = [
+    'accession',
+    'summary',
+    'sample_terms',
     'modifications',
-    'moi',
+    'targeted_sample_term',
+    'classifications',
     'multiplexed_samples',
     'pooled_from',
-    'sample_terms',
+    'donors',
+    'construct_library_sets',
+    'biosample_qualifiers',
+    'embryonic',
     'sorted_fractions',
-    'summary',
-    'targeted_sample_term',
     'upper_bound_age',
+    'lower_bound_age',
+    'age_units',
+    'moi',
 ]
 
 
 DONOR_FIELDS = [
-    '@id',
     'accession',
     'ethnicities',
     'phenotypic_features',
@@ -302,41 +299,86 @@ def serialize_cell(value):
     if isinstance(value, (list, dict)):
         return json.dumps(value)
     if isinstance(value, (int, float)):
-        return str(int)
+        return str(value)
     return value
 
 
+def add_fields_to_row(item, fields, row):
+    for field in fields:
+        if field == 'type':
+            row.append(item['@type'][0])
+        else:
+            row.append(
+                serialize_cell(
+                    item.get(field, '')
+                )
+            )
+
+
 def make_data_tables(metadata: Dict[str, Any], destination_bucket: str) -> Dict[str, Any]:
-    files_tsv = ''
-    file_sets_tsv = ''
-    samples_tsv = ''
-    donors_tsv = ''
     file_headers = ['file_id', 'file_path'] + FILE_FIELDS
-    files_tsv += '\t'.join(file_headers)
+    files_tsv = '\t'.join(file_headers)
     for f in metadata['seen']['files']:
         full_file = metadata['local']['files'][f]
         row = [
-            full_file['accession'],
+            full_file['@id'],
             make_gs_file_path_from_s3_uri(
                 destination_bucket,
                 full_file['s3_uri']
             )
         ]
-        for field in FILE_FIELDS:
-            if field == 'type':
-                row.append(full_file['@type'][0])
-            else:
-                row.append(
-                    serialize_cell(
-                        full_file.get(field, '')
-                    )
-                )
-        files_tsv += '\n'.join(row)
-    print(files_tsv)
-    
+        add_fields_to_row(full_file, FILE_FIELDS, row)
+        files_tsv = files_tsv + '\n' + '\t'.join(row)
+
+    file_set_headers = ['file_set_id'] + FILE_SET_FIELDS
+    file_sets_tsv = '\t'.join(file_set_headers)
+    for fs in metadata['seen']['file_sets']:
+        full_fs = metadata['local']['file_sets'][fs]
+        row = [
+            full_fs['@id'],
+        ]
+        add_fields_to_row(full_fs, FILE_SET_FIELDS, row)
+        file_sets_tsv = file_sets_tsv + '\n' + '\t'.join(row)
+
+    sample_headers = ['sample_id'] + SAMPLE_FIELDS
+    samples_tsv = '\t'.join(sample_headers)
+    for s in metadata['seen']['samples']:
+        full_s = metadata['local']['samples'][s]
+        row = [
+            full_s['@id'],
+        ]
+        add_fields_to_row(full_s, SAMPLE_FIELDS, row)
+        samples_tsv = samples_tsv + '\n' + '\t'.join(row)
+
+    donor_headers = ['donor_id'] + DONOR_FIELDS
+    donors_tsv = '\t'.join(donor_headers)
+    for d in metadata['seen']['donors']:
+        full_d = metadata['local']['donors'][d]
+        row = [
+            full_d['@id'],
+        ]
+        add_fields_to_row(full_d, DONOR_FIELDS, row)
+        print(
+            {k: v for k, v in zip(donor_headers, row)}
+        )
+        donors_tsv = donors_tsv + '\n' + '\t'.join(row)
+
+    with open('test_file.tsv', 'w') as f:
+        f.write(files_tsv)
+
+    with open('test_file_sets.tsv', 'w') as f:
+        f.write(file_sets_tsv)
+
+    with open('test_samples.tsv', 'w') as f:
+        f.write(samples_tsv)
+
+    print(donors_tsv)
+    with open('test_donors.tsv', 'w') as f:
+        f.write(donors_tsv)
+
     return {
-        'files': '',
-        'file_sets': '',
-        'samples': '',
-        'donors': '',
+        'files': files_tsv,
+        'file_sets': file_sets_tsv,
+        'samples': samples_tsv,
+        'donors': donors_tsv,
     }
