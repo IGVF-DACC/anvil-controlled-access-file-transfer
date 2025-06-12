@@ -162,6 +162,8 @@ def post_tsv_from_memory(session, workspace_namespace, workspace_name, in_memory
         }
     )
     logger.info(f'Post response {response.status_code} {response.text}')
+    if response.status_code != 200:
+        raise ValueError('Post response not 200, not continuing')
 
 
 def print_summary(files_seen, file_sets_seen, samples_seen, donors_seen, full=False):

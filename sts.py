@@ -70,9 +70,9 @@ AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
 
 AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
 
-MANIFEST_BUCKET = 'test-pulumi-bucket-58b2c6f'
+MANIFEST_BUCKET = 'anvil-c8f2ca0',
 
-PROJECT_ID = 'encode-dcc-1016'
+PROJECT_ID = 'igvf-anvil-controlled-access'
 
 
 @dataclass
@@ -197,7 +197,7 @@ def upload_data_tables(session, data_tables, workspace_namespace, workspace_name
                 workspace_name,
                 session,
             )
-    time.sleep(15)
+        time.sleep(15)
     for name, tsv in data_tables.items():
         logger.info(f'Writing {name} TSV to {workspace_namespace}/{workspace_name}')
         post_tsv_from_memory(
@@ -227,10 +227,10 @@ context = {
         'name': 'igvf-anvil-hmb-mds',
         'project_id': PROJECT_ID,
         'manifest_bucket': MANIFEST_BUCKET,
-        'destination_bucket': 'test-pulumi-bucket-58b2c6f',
+        'destination_bucket': 'fc-secure-915c3459-ce08-44fc-87a8-91986d35519e',
         'sleep_time_seconds': 120,
-        'workspace_namespace': 'DACC_ANVIL',
-        'workspace_name': 'IGVF AnVIL Sandbox',
+        'workspace_namespace': 'anvil-datastorage',
+        'workspace_name': 'AnVIL_IGVF_HMB_MDS_R1_Staging',
         'overwrite_tsvs': False,
     }
 }
