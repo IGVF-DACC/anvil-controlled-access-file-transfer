@@ -6,6 +6,8 @@ import requests
 
 import logging
 
+import time
+
 from io import StringIO
 
 from dataclasses import dataclass
@@ -147,10 +149,7 @@ def delete_table_named(name, workspace_namespace, workspace_name, session):
     print(response.text)
 
 
-def post_tsv_from_memory(session, workspace_namespace, workspace_name, in_memory_tsv, overwrite=False):
-    if overwrite:
-        name = get_name_from_tsv(in_memory_tsv)
-        delete_table_named(name, workspace_namespace, workspace_name, session)
+def post_tsv_from_memory(session, workspace_namespace, workspace_name, in_memory_tsv):
     url = f'https://api.firecloud.org/api/workspaces/{workspace_namespace}/{workspace_name}/flexibleImportEntities'
     response = session.post(
         url,

@@ -29,6 +29,7 @@ from metadata import make_sts_manifests_from_metadata
 from metadata import make_data_tables
 from metadata import get_session
 from metadata import post_tsv_from_memory
+from metadata import delete_table_named
 
 parser = argparse.ArgumentParser()
 
@@ -186,14 +187,23 @@ def upload_tsv_to_bucket(tsv: str, props: TransferJob):
 
 
 def upload_data_tables(session, data_tables, workspace_namespace, workspace_name, overwrite_tsvs):
+    if overwrite_tsvs:
+        for name, tsv in data_tables.items():
+            logger.info(f'Deleting {name} TSV from {workspace_namespace}/{workspace_name}')
+            delete_table_named(
+                name,
+                workspace_namespace,
+                workspace_name,
+                session,
+            )
+    time.sleep(10)
     for name, tsv in data_tables.items():
-        logger.info(f'Writing {name} TSV to {workspace_namespace}/{workspace_name}, overwriting {overwrite_tsvs}')
+        logger.info(f'Writing {name} TSV to {workspace_namespace}/{workspace_name}')
         post_tsv_from_memory(
             session,
             workspace_namespace,
             workspace_name,
             tsv,
-            overwrite_tsvs,
         )
         time.sleep(1)
 
@@ -271,7 +281,6 @@ if __name__ == '__main__':
         metadata,
         config['destination_bucket'],
     )
-'''
     upload_data_tables(
         session,
         data_tables,
@@ -279,4 +288,3 @@ if __name__ == '__main__':
         config['workspace_name'],
         config['overwrite_tsvs']
     )
-'''
