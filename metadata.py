@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 
 FILE_FIELDS = [
-    'accession',
+    '@id',
     'type',
     'summary',
     'assay_titles',
@@ -51,8 +51,8 @@ FILE_FIELDS = [
 
 
 FILE_SET_FIELDS = [
+    '@id',
     'type',
-    'accession',
     'assay_term',
     'assay_titles',
     'associated_phenotypes',
@@ -82,7 +82,7 @@ FILE_SET_FIELDS = [
 
 
 SAMPLE_FIELDS = [
-    'accession',
+    '@id',
     'summary',
     'sample_terms',
     'modifications',
@@ -103,7 +103,7 @@ SAMPLE_FIELDS = [
 
 
 DONOR_FIELDS = [
-    'accession',
+    '@id',
     'ethnicities',
     'phenotypic_features',
     'sex',
@@ -321,7 +321,7 @@ def make_data_tables(metadata: Dict[str, Any], destination_bucket: str) -> Dict[
     for f in metadata['seen']['files']:
         full_file = metadata['local']['files'][f]
         row = [
-            full_file['@id'],
+            full_file['accession'],
             make_gs_file_path_from_s3_uri(
                 destination_bucket,
                 full_file['s3_uri']
@@ -335,7 +335,7 @@ def make_data_tables(metadata: Dict[str, Any], destination_bucket: str) -> Dict[
     for fs in metadata['seen']['file_sets']:
         full_fs = metadata['local']['file_sets'][fs]
         row = [
-            full_fs['@id'],
+            full_fs['accession'],
         ]
         add_fields_to_row(full_fs, FILE_SET_FIELDS, row)
         file_sets_tsv = file_sets_tsv + '\n' + '\t'.join(row)
@@ -345,7 +345,7 @@ def make_data_tables(metadata: Dict[str, Any], destination_bucket: str) -> Dict[
     for s in metadata['seen']['samples']:
         full_s = metadata['local']['samples'][s]
         row = [
-            full_s['@id'],
+            full_s['accession'],
         ]
         add_fields_to_row(full_s, SAMPLE_FIELDS, row)
         samples_tsv = samples_tsv + '\n' + '\t'.join(row)
@@ -355,10 +355,22 @@ def make_data_tables(metadata: Dict[str, Any], destination_bucket: str) -> Dict[
     for d in metadata['seen']['donors']:
         full_d = metadata['local']['donors'][d]
         row = [
-            full_d['@id'],
+            full_d['accession'],
         ]
         add_fields_to_row(full_d, DONOR_FIELDS, row)
         donors_tsv = donors_tsv + '\n' + '\t'.join(row)
+
+    with open('test_file.tsv', 'w') as f:
+        f.write(files_tsv)
+
+    with open('test_file_sets.tsv', 'w') as f:
+        f.write(file_sets_tsv)
+
+    with open('test_samples.tsv', 'w') as f:
+        f.write(samples_tsv)
+
+    with open('test_donors.tsv', 'w') as f:
+        f.write(donors_tsv)
 
     return {
         'files': files_tsv,
