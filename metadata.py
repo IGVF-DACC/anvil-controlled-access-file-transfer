@@ -399,7 +399,7 @@ def make_data_tables(metadata: Dict[str, Any], destination_bucket: str) -> Dict[
         add_fields_to_row(full_d, DONOR_FIELDS, row)
         donors_tsv = donors_tsv + '\n' + '\t'.join(row)
 
-'''
+    '''
     with open('test_file.tsv', 'w') as f:
         f.write(files_tsv)
 
@@ -411,7 +411,7 @@ def make_data_tables(metadata: Dict[str, Any], destination_bucket: str) -> Dict[
 
     with open('test_donors.tsv', 'w') as f:
         f.write(donors_tsv)
-'''
+    '''
 
     return {
         'files': files_tsv,
