@@ -30,6 +30,7 @@ from metadata import make_data_tables
 from metadata import get_session
 from metadata import post_tsv_from_memory
 from metadata import delete_table_named
+from metadata import get_name_from_tsv
 
 parser = argparse.ArgumentParser()
 
@@ -191,12 +192,12 @@ def upload_data_tables(session, data_tables, workspace_namespace, workspace_name
         for name, tsv in data_tables.items():
             logger.info(f'Deleting {name} TSV from {workspace_namespace}/{workspace_name}')
             delete_table_named(
-                name,
+                get_name_from_tsv(name),
                 workspace_namespace,
                 workspace_name,
                 session,
             )
-    time.sleep(10)
+    time.sleep(15)
     for name, tsv in data_tables.items():
         logger.info(f'Writing {name} TSV to {workspace_namespace}/{workspace_name}')
         post_tsv_from_memory(
@@ -271,12 +272,13 @@ if __name__ == '__main__':
         transfer_job_props.append(
             props
         )
-        #upload_tsv_to_bucket(
-        #    tsv,
-        #    props
-        #)
-        # create_transfer_job(props)
-        # wait_for_transfer_job(props)
+        upload_tsv_to_bucket(
+            tsv,
+            props
+        )
+        create_transfer_job(props)
+    for source_bucket, tsv in manifests.items():
+        wait_for_transfer_job(props)
     data_tables = make_data_tables(
         metadata,
         config['destination_bucket'],

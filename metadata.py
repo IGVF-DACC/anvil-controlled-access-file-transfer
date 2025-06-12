@@ -138,8 +138,8 @@ def get_session():
 
 def get_name_from_tsv(tsv):
     first_header = tsv.split('\t')[0]
-    if '_' in first_header:
-        return first_header.split('_')[0]
+    if '_id' in first_header:
+        return first_header.replace('_id', '')
     return first_header
 
 
