@@ -31,6 +31,8 @@ AT_ID_LINKS = [
     'donors',
 ]
 
+# sequencing_platform.platform_term
+# lab -> lab.title
 
 FILE_FIELDS = [
     'type',
@@ -41,14 +43,11 @@ FILE_FIELDS = [
     'file_format_type',
     'file_size',
     'md5sum',
-    'content_summary',
     'file_set',
     'seqspecs',
-    'seqspec_of'
     'workflow',
     'derived_from',
     'assembly',
-    'base_modifications',
     'cell_type_annotation',
     'flowcell_id',
     'illumina_read_type',
@@ -399,19 +398,17 @@ def make_data_tables(metadata: Dict[str, Any], destination_bucket: str) -> Dict[
         add_fields_to_row(full_d, DONOR_FIELDS, row)
         donors_tsv = donors_tsv + '\n' + '\t'.join(row)
 
-    '''
-    with open('test_file.tsv', 'w') as f:
+    with open('igvf_anvil_hmb_mds_files.tsv', 'w') as f:
         f.write(files_tsv)
 
-    with open('test_file_sets.tsv', 'w') as f:
+    with open('igvf_anvil_hmb_mds_file_sets.tsv', 'w') as f:
         f.write(file_sets_tsv)
 
-    with open('test_samples.tsv', 'w') as f:
+    with open('igvf_anvil_hmb_mds_samples.tsv', 'w') as f:
         f.write(samples_tsv)
 
-    with open('test_donors.tsv', 'w') as f:
+    with open('igvf_anvil_hmb_mds_donors.tsv', 'w') as f:
         f.write(donors_tsv)
-    '''
 
     return {
         'files': files_tsv,
