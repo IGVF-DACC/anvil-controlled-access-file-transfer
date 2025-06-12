@@ -27,6 +27,8 @@ from metadata import collect_metadata
 from metadata import MetadataProps
 from metadata import make_sts_manifests_from_metadata
 from metadata import make_data_tables
+from metadata import get_session
+from metadata import post_tsv_from_memory
 
 parser = argparse.ArgumentParser()
 
@@ -183,6 +185,18 @@ def upload_tsv_to_bucket(tsv: str, props: TransferJob):
     )
 
 
+def upload_data_tables(session, data_tables, workspace_namespace, workspace_name, overwrite_tsvs):
+    for name, tsv in data_tables.items():
+        logger.info(f'Writing {name} TSV to {workspace_namespace}/{workspace_name}, overwriting {overwrite_tsvs}')
+        post_tsv_from_memory(
+            session,
+            workspace_namespace,
+            workspace_name,
+            tsv,
+            overwrite_tsvs,
+        )
+
+
 context = {
     'HMB-MDS': {
         'metadata_props': MetadataProps(
@@ -202,14 +216,16 @@ context = {
         'project_id': PROJECT_ID,
         'manifest_bucket': MANIFEST_BUCKET,
         'destination_bucket': 'test-pulumi-bucket-58b2c6f',
+        'sleep_time_seconds': 120,
         'workspace_namespace': 'DACC_ANVIL',
         'workspace_name': 'IGVF AnVIL Sandbox',
-        'sleep_time_seconds': 120,
+        'overwrite_tsvs': False,
     }
 }
 
 
 if __name__ == '__main__':
+    session = get_sesion()
     sts_client = StorageTransferServiceClient()
     storage_client = StorageClient()
     config = context[args.dul]
@@ -254,15 +270,10 @@ if __name__ == '__main__':
         metadata,
         config['destination_bucket'],
     )
-    print(manifests)
-    '''
-    # Generate metadata
-    # Generate files_to_move tsvs, grouped by source bucket
-    # Put file tsv manifests in Google bucket (named by job name, source_bucket, date)
-    # For each source bucket, launchs jobs
-    # For each each job, monitor until all successful
-    # Upload metadata tables
-    tsv = 'ENCFF053BBK.fastq.gz\nENCFF110XAL.fastq.gz'
-    create_transfer_job(props)
-    wait_for_transfer_job(props)
-    '''
+    upload_data_tables(
+        session,
+        data_tables,
+        config['workspace_namespace'],
+        config['workspace_name'],
+        config['overwrite_tsvs']
+    )

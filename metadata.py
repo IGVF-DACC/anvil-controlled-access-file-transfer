@@ -358,23 +358,7 @@ def make_data_tables(metadata: Dict[str, Any], destination_bucket: str) -> Dict[
             full_d['@id'],
         ]
         add_fields_to_row(full_d, DONOR_FIELDS, row)
-        print(
-            {k: v for k, v in zip(donor_headers, row)}
-        )
         donors_tsv = donors_tsv + '\n' + '\t'.join(row)
-
-    with open('test_file.tsv', 'w') as f:
-        f.write(files_tsv)
-
-    with open('test_file_sets.tsv', 'w') as f:
-        f.write(file_sets_tsv)
-
-    with open('test_samples.tsv', 'w') as f:
-        f.write(samples_tsv)
-
-    print(donors_tsv)
-    with open('test_donors.tsv', 'w') as f:
-        f.write(donors_tsv)
 
     return {
         'files': files_tsv,
