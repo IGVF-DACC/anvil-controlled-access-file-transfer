@@ -225,7 +225,7 @@ context = {
 
 
 if __name__ == '__main__':
-    session = get_sesion()
+    session = get_session()
     sts_client = StorageTransferServiceClient()
     storage_client = StorageClient()
     config = context[args.dul]
