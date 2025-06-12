@@ -18,7 +18,6 @@ from google.auth import compute_engine
 from google.auth.transport.requests import AuthorizedSession
 
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -146,7 +145,7 @@ def get_name_from_tsv(tsv):
 def delete_table_named(name, workspace_namespace, workspace_name, session):
     delete_url = f'https://api.firecloud.org/api/workspaces/{workspace_namespace}/{workspace_name}/entityTypes/{name}'
     response = session.delete(delete_url)
-    print(response.text)
+    logger.info(f'Delete response: {response.text}')
 
 
 def post_tsv_from_memory(session, workspace_namespace, workspace_name, in_memory_tsv):
@@ -162,7 +161,7 @@ def post_tsv_from_memory(session, workspace_namespace, workspace_name, in_memory
             ),
         }
     )
-    print(response.text)
+    logger.info(f'Post response: {response.text}')
 
 
 def print_summary(files_seen, file_sets_seen, samples_seen, donors_seen, full=False):
@@ -210,7 +209,7 @@ def collect_metadata(props: MetadataProps) -> Dict[str, Any]:
         f['file_set']
         for f in files
     }
-    print(f'Found {len(files)} files and {len(file_sets)} file_sets')
+    logger.info(f'Found {len(files)} files and {len(file_sets)} file_sets')
     while file_sets:
         fs = file_sets.pop()
         if fs in file_sets_seen:
