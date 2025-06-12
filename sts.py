@@ -70,7 +70,7 @@ AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
 
 AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
 
-MANIFEST_BUCKET = 'anvil-c8f2ca0',
+MANIFEST_BUCKET = 'anvil-c8f2ca0'
 
 PROJECT_ID = 'igvf-anvil-controlled-access'
 
