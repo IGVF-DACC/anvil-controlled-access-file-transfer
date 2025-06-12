@@ -255,31 +255,7 @@ if __name__ == '__main__':
     # For each source bucket, launchs jobs
     # For each each job, monitor until all successful
     # Upload metadata tables
-    source_bucket =
-    props = TransferJobProps(
-        name=generate_name(
-            'test-sts-py',
-            source_bucket,
-            now
-        ),
-        project_id='encode-dcc-1016',
-        source_bucket=source_bucket,
-        destination_bucket='test-pulumi-bucket-58b2c6f',
-        manifest_bucket=MANIFEST_BUCKET,
-        aws_access_key=AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-        sts_client=sts_client,
-        storage_client=storage_client,
-        now=now,
-        sleep_time_seconds=120,
-    )
     tsv = 'ENCFF053BBK.fastq.gz\nENCFF110XAL.fastq.gz'
-    upload_tsv_to_bucket(
-        tsv,
-        MANIFEST_BUCKET,
-        props.name,
-        props
-    )
     create_transfer_job(props)
     wait_for_transfer_job(props)
     '''
