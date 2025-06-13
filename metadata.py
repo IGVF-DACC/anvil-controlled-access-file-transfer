@@ -35,8 +35,6 @@ AT_ID_LINKS = [
 # lab -> lab.title
 #' Phenotypic_feature.feature.term_name'
 
-#file_name 
-
 FILE_FIELDS = [
     'type',
     'summary',
@@ -51,7 +49,7 @@ FILE_FIELDS = [
     'seqspecs',
     'workflow',
     'derived_from',
-    'assembly',
+    'reference_assembly', # 'assembly'
     'cell_type_annotation',
     'flowcell_id',
     'illumina_read_type',
@@ -118,7 +116,7 @@ SAMPLE_FIELDS = [
 
 DONOR_FIELDS = [
     'type',
-    'reported_ethnicity', # 'ethnicities',
+    'reported_ethnicity', # 'ethnicities'
     'phenotypic_features',
     'phenotypic_sex', # 'sex'
     'organism_type', # 'taxa'
@@ -334,6 +332,8 @@ def add_fields_to_row(item, fields, row, name):
             value = item['s3_uri'].split('/')[-1]
         elif field == 'file_md5sum':
             value = item['md5sum']
+        elif name == 'files' and field == 'reference_assembly':
+            value = item.get('assembly', '')
         elif name == 'donors' and field == 'organism_type':
             value = item.get('taxa', '')
         elif name == 'donors' and field == 'phenotypic_sex':
