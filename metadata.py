@@ -29,6 +29,7 @@ AT_ID_LINKS = [
     'input_file_sets',
     'samples',
     'donors',
+    'donor_id',
 ]
 
 # sequencing_platform.platform_term
@@ -99,17 +100,17 @@ SAMPLE_FIELDS = [
     'sample_terms',
     'modifications',
     'targeted_sample_term',
-    'classifications',
+    'biosample_type', # 'classifications'
     'multiplexed_samples',
     'pooled_from',
-    'donors',
+    'donor_id', #'donors',
     'construct_library_sets',
     'biosample_qualifiers',
     'embryonic',
     'sorted_fractions',
-    'upper_bound_age',
-    'lower_bound_age',
-    'age_units',
+    'donor_age_at_collection_unit_upper_bound', # 'upper_bound_age'
+    'donor_age_at_collection_unit_lower_bound', # 'lower_bound_age'
+    'donor_age_at_collection_unit', # 'age_units'
     'moi',
 ]
 
@@ -340,6 +341,16 @@ def add_fields_to_row(item, fields, row, name):
             value = item.get('sex', '')
         elif name == 'donors' and field == 'reported_ethnicity':
             value = item.get('ethnicities', '')
+        elif name == 'samples' and field == 'biosample_type':
+            value = item.get('classifications', '')
+        elif name == 'samples' and field == 'donor_id':
+            value = item.get('donors', '')
+        elif name == 'samples' and field == 'donor_age_at_collection_unit_upper_bound':
+            value = item.get('upper_bound_age', '')
+        elif name == 'samples' and field == 'donor_age_at_collection_unit_lower_bound':
+            value = item.get('lower_bound_age', '')
+        elif name == 'samples' and field == 'donor_age_at_collection_unit':
+            value = item.get('age_units', '')
         else:
             value = item.get(field, '')
         if field in AT_ID_LINKS:
