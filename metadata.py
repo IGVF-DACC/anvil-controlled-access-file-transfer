@@ -419,7 +419,7 @@ def make_data_tables(metadata: Dict[str, Any], destination_bucket: str, portal_u
         full_d = metadata['local']['donors'][d]
         row = [
             full_d['accession'],
-            full_d['@id'],
+            portal_url + full_d['@id'],
         ]
         add_fields_to_row(full_d, DONOR_FIELDS, row, 'donors')
         donors_tsv = donors_tsv + '\n' + '\t'.join(row)
