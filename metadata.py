@@ -33,6 +33,9 @@ AT_ID_LINKS = [
 
 # sequencing_platform.platform_term
 # lab -> lab.title
+#' Phenotypic_feature.feature.term_name'
+
+#file_name 
 
 FILE_FIELDS = [
     'type',
@@ -42,7 +45,7 @@ FILE_FIELDS = [
     'file_format',
     'file_format_type',
     'file_size',
-    'md5sum',
+    'md5sum', #file_md5sum
     'file_set',
     'seqspecs',
     'workflow',
@@ -319,7 +322,7 @@ def parse_accession_from_at_ids(at_ids) -> list[str]:
     ]
 
 
-def add_fields_to_row(item, fields, row):
+def add_fields_to_row(item, fields, row, name):
     for field in fields:
         if field == 'type':
             row.append(item['@type'][0])
@@ -365,7 +368,7 @@ def make_data_tables(metadata: Dict[str, Any], destination_bucket: str) -> Dict[
                 full_file['s3_uri']
             )
         ]
-        add_fields_to_row(full_file, FILE_FIELDS, row)
+        add_fields_to_row(full_file, FILE_FIELDS, row, 'files')
         files_tsv = files_tsv + '\n' + '\t'.join(row)
 
     file_set_headers = ['file_set_id'] + FILE_SET_FIELDS
@@ -375,7 +378,7 @@ def make_data_tables(metadata: Dict[str, Any], destination_bucket: str) -> Dict[
         row = [
             full_fs['accession'],
         ]
-        add_fields_to_row(full_fs, FILE_SET_FIELDS, row)
+        add_fields_to_row(full_fs, FILE_SET_FIELDS, row, 'file_sets')
         file_sets_tsv = file_sets_tsv + '\n' + '\t'.join(row)
 
     sample_headers = ['sample_id'] + SAMPLE_FIELDS
@@ -385,7 +388,7 @@ def make_data_tables(metadata: Dict[str, Any], destination_bucket: str) -> Dict[
         row = [
             full_s['accession'],
         ]
-        add_fields_to_row(full_s, SAMPLE_FIELDS, row)
+        add_fields_to_row(full_s, SAMPLE_FIELDS, row, 'samples')
         samples_tsv = samples_tsv + '\n' + '\t'.join(row)
 
     donor_headers = ['donor_id'] + DONOR_FIELDS
@@ -395,9 +398,9 @@ def make_data_tables(metadata: Dict[str, Any], destination_bucket: str) -> Dict[
         row = [
             full_d['accession'],
         ]
-        add_fields_to_row(full_d, DONOR_FIELDS, row)
+        add_fields_to_row(full_d, DONOR_FIELDS, row, 'donors')
         donors_tsv = donors_tsv + '\n' + '\t'.join(row)
-
+    '''
     with open('igvf_anvil_hmb_mds_files.tsv', 'w') as f:
         f.write(files_tsv)
 
@@ -409,7 +412,7 @@ def make_data_tables(metadata: Dict[str, Any], destination_bucket: str) -> Dict[
 
     with open('igvf_anvil_hmb_mds_donors.tsv', 'w') as f:
         f.write(donors_tsv)
-
+    '''
     return {
         'files': files_tsv,
         'file_sets': file_sets_tsv,
