@@ -74,6 +74,8 @@ MANIFEST_BUCKET = 'anvil-c8f2ca0'
 
 PROJECT_ID = 'igvf-anvil-controlled-access'
 
+IGVF_PORTAL_UI_URL = 'https://data.igvf.org'
+
 
 @dataclass
 class TransferJobProps:
@@ -282,6 +284,7 @@ if __name__ == '__main__':
     data_tables = make_data_tables(
         metadata,
         config['destination_bucket'],
+        IGVF_PORTAL_UI_URL,
     )
     upload_data_tables(
         session,
