@@ -30,6 +30,9 @@ AT_ID_LINKS = [
     'samples',
     'donors',
     'donor_id',
+    'biosample_id',
+    'file_id',
+    'file_set_id',
 ]
 
 # sequencing_platform.platform_term
@@ -83,7 +86,7 @@ FILE_SET_FIELDS = [
     'lab',
     'preferred_assay_title',
     'sample_summary',
-    'samples',
+    'biosample_id', # 'samples'
     'scope',
     'selection_criteria',
     'sequencing_library_types',
@@ -335,6 +338,8 @@ def add_fields_to_row(item, fields, row, name):
             value = item['md5sum']
         elif name == 'files' and field == 'reference_assembly':
             value = item.get('assembly', '')
+        elif name == 'file_sets' and field == 'biosample_id':
+            value = item.get('samples', '')
         elif name == 'donors' and field == 'organism_type':
             value = item.get('taxa', '')
         elif name == 'donors' and field == 'phenotypic_sex':
