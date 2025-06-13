@@ -428,19 +428,6 @@ def make_data_tables(metadata: Dict[str, Any], destination_bucket: str, portal_u
         ]
         add_fields_to_row(full_d, DONOR_FIELDS, row, 'donors')
         donors_tsv = donors_tsv + '\n' + '\t'.join(row)
-    '''
-    with open('igvf_anvil_hmb_mds_files.tsv', 'w') as f:
-        f.write(files_tsv)
-
-    with open('igvf_anvil_hmb_mds_file_sets.tsv', 'w') as f:
-        f.write(file_sets_tsv)
-
-    with open('igvf_anvil_hmb_mds_samples.tsv', 'w') as f:
-        f.write(samples_tsv)
-
-    with open('igvf_anvil_hmb_mds_donors.tsv', 'w') as f:
-        f.write(donors_tsv)
-    '''
     return {
         'files': files_tsv,
         'file_sets': file_sets_tsv,

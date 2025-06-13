@@ -286,6 +286,14 @@ if __name__ == '__main__':
         config['destination_bucket'],
         IGVF_PORTAL_UI_URL,
     )
+    '''
+    for table_name, tsv in data_tables.items():
+        with open(
+                f'igvf_anvil_{args.dul.lower().replace("-", "_")}_{table_name}.tsv',
+                'w'
+        ) as f:
+            f.write(tsv)
+    '''
     upload_data_tables(
         session,
         data_tables,
