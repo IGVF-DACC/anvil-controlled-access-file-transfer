@@ -118,10 +118,10 @@ SAMPLE_FIELDS = [
 
 DONOR_FIELDS = [
     'type',
-    'ethnicities',
+    'reported_ethnicity', # 'ethnicities',
     'phenotypic_features',
-    'sex',
-    'taxa',
+    'phenotypic_sex', # 'sex'
+    'organism_type', # 'taxa'
 ]
 
 
@@ -334,6 +334,12 @@ def add_fields_to_row(item, fields, row, name):
             value = item['s3_uri'].split('/')[-1]
         elif field == 'file_md5sum':
             value = item['md5sum']
+        elif name == 'donors' and field == 'organism_type':
+            value = item.get('taxa', '')
+        elif name == 'donors' and field == 'phenotypic_sex':
+            value = item.get('sex', '')
+        elif name == 'donors' and field == 'reported_ethnicity':
+            value = item.get('ethnicities', '')
         else:
             value = item.get(field, '')
         if field in AT_ID_LINKS:
