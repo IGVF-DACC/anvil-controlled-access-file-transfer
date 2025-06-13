@@ -42,10 +42,11 @@ FILE_FIELDS = [
     'summary',
     'assay_titles',
     'content_type',
+    'file_name',
     'file_format',
     'file_format_type',
     'file_size',
-    'md5sum', #file_md5sum
+    'file_md5sum',
     'file_set',
     'seqspecs',
     'workflow',
@@ -324,40 +325,41 @@ def parse_accession_from_at_ids(at_ids) -> list[str]:
 
 def add_fields_to_row(item, fields, row, name):
     for field in fields:
+        value = None
         if field == 'type':
-            row.append(item['@type'][0])
+            value = item['@type'][0]
         elif field == 'id':
-            row.append(item['@id'])
-        elif field in AT_ID_LINKS:
-            value = item.get(field, '')
-            if not value:
-                row.append(value)
-            elif isinstance(value, str):
-                row.append(
-                    parse_accession_from_at_ids(
-                        [
-                            value
-                        ]
-                    )[0]
-                )
-            else:
-                row.append(
-                    serialize_cell(
-                        parse_accession_from_at_ids(
-                            value
-                        )
-                    )
-                )
+            value = item['@id']
+        elif field == 'file_name':
+            value = item['s3_uri'].split('/')[-1]
+        elif field == 'file_md5sum':
+            value = item['md5sum']
         else:
-            row.append(
-                serialize_cell(
-                    item.get(field, '')
+            value = item.get(field, '')
+        if field in AT_ID_LINKS:
+            value = value or item.get(field, '')
+            if not value:
+                value = value
+            elif isinstance(value, str):
+                value = parse_accession_from_at_ids(
+                    [
+                        value
+                    ]
+                )[0]
+            else:
+                value = parse_accession_from_at_ids(
+                    value
                 )
+        assert value is not None
+        row.append(
+            serialize_cell(
+                value
             )
+        )
 
 
-def make_data_tables(metadata: Dict[str, Any], destination_bucket: str) -> Dict[str, Any]:
-    file_headers = ['file_id', 'file_path'] + FILE_FIELDS
+def make_data_tables(metadata: Dict[str, Any], destination_bucket: str, portal_url: str) -> Dict[str, Any]:
+    file_headers = ['file_id', 'file_path', 'igvf_portal_url'] + FILE_FIELDS
     files_tsv = '\t'.join(file_headers)
     for f in metadata['seen']['files']:
         full_file = metadata['local']['files'][f]
@@ -366,37 +368,41 @@ def make_data_tables(metadata: Dict[str, Any], destination_bucket: str) -> Dict[
             make_gs_file_path_from_s3_uri(
                 destination_bucket,
                 full_file['s3_uri']
-            )
+            ),
+            portal_url + full_file['@id'],
         ]
         add_fields_to_row(full_file, FILE_FIELDS, row, 'files')
         files_tsv = files_tsv + '\n' + '\t'.join(row)
 
-    file_set_headers = ['file_set_id'] + FILE_SET_FIELDS
+    file_set_headers = ['file_set_id', 'igvf_portal_url'] + FILE_SET_FIELDS
     file_sets_tsv = '\t'.join(file_set_headers)
     for fs in metadata['seen']['file_sets']:
         full_fs = metadata['local']['file_sets'][fs]
         row = [
             full_fs['accession'],
+            portal_url + full_fs['@id'],
         ]
         add_fields_to_row(full_fs, FILE_SET_FIELDS, row, 'file_sets')
         file_sets_tsv = file_sets_tsv + '\n' + '\t'.join(row)
 
-    sample_headers = ['sample_id'] + SAMPLE_FIELDS
+    sample_headers = ['sample_id', 'igvf_portal_url'] + SAMPLE_FIELDS
     samples_tsv = '\t'.join(sample_headers)
     for s in metadata['seen']['samples']:
         full_s = metadata['local']['samples'][s]
         row = [
             full_s['accession'],
+            portal_url + full_s['@id'],
         ]
         add_fields_to_row(full_s, SAMPLE_FIELDS, row, 'samples')
         samples_tsv = samples_tsv + '\n' + '\t'.join(row)
 
-    donor_headers = ['donor_id'] + DONOR_FIELDS
+    donor_headers = ['donor_id', 'igvf_portal_url'] + DONOR_FIELDS
     donors_tsv = '\t'.join(donor_headers)
     for d in metadata['seen']['donors']:
         full_d = metadata['local']['donors'][d]
         row = [
             full_d['accession'],
+            full_d['@id'],
         ]
         add_fields_to_row(full_d, DONOR_FIELDS, row, 'donors')
         donors_tsv = donors_tsv + '\n' + '\t'.join(row)
