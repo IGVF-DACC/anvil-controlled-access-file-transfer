@@ -35,7 +35,10 @@ AT_ID_LINKS = [
 
 # sequencing_platform.platform_term
 # lab -> lab.title
+# award -> award.title?
 #' Phenotypic_feature.feature.term_name'
+# sample_terms.term_name
+# targeted_sample_terms.term_name
 
 FILE_FIELDS = [
     'type',
@@ -122,6 +125,11 @@ DONOR_FIELDS = [
     'phenotypic_features',
     'phenotypic_sex', # 'sex'
     'organism_type', # 'taxa'
+]
+
+
+PRELOAD_SEARCHES = [
+    '/search/?type=RodentDonor&limit=all&frame=object',
 ]
 
 
@@ -229,7 +237,7 @@ def collect_metadata(props: MetadataProps) -> Dict[str, Any]:
                     file_sets.add(ifs)
         if 'files' in full_fs:
             print('Getting files')
-            for f in full_fs['files']:
+            for f in full_fs['files']:l
                 if f not in files_seen:
                     full_file = requests.get(props.portal_url + f + '@@object').json()
                     files_local[f] = full_file

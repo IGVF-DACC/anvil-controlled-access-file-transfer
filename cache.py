@@ -34,8 +34,9 @@ class PortalCache:
             results = requests.get(
                 self.props.base_url + search
             ).json()['@graph']
+            print(f'Got {len(results)} results from {search}')
             for result in results:
-                self.local[results['@id']] = result
+                self.local[result['@id']] = result
 
     async def async_batch_get(self, at_ids: List[str], load_cache: bool = True) -> Dict[str, Any]:
         cached_ids = [
@@ -74,6 +75,9 @@ class PortalCache:
 
 
 '''
+PRELOAD_SEARCHES = [
+    '/search/?type=RodentDonor',
+]
 import logging
 logging.basicConfig(level=logging.INFO)
 from igvf_async_client import AsyncIgvfApi
@@ -82,6 +86,7 @@ from cache import PortalCacheProps
 from cache import PortalCache
 p = PortalCacheProps(base_url='https://api.data.igvf.org', async_portal_api=api)
 pc = PortalCache(props=p)
+pc.preload(PRELOAD_SEARCHES)
 ids = ['/rodent-donors/IGVFDO0813DZTW/', '/rodent-donors/IGVFDO4725SNCJ/', '/rodent-donors/IGVFDO3534MDFF/', '/rodent-donors/IGVFDO2319OUEC/']
 await pc.async_batch_get(ids)
 '''
