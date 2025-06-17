@@ -56,7 +56,7 @@ class PortalCache:
             )
         )
         logger.info(f'Got {len(results)} remote results')
-        if load_cache:
+        if results and load_cache:
             logger.info('Updating cache')
             self.local.update(results)
         if cached_ids:
@@ -74,6 +74,8 @@ class PortalCache:
 
 
 '''
+import logging
+logging.basicConfig(level=logging.INFO)
 from igvf_async_client import AsyncIgvfApi
 api = AsyncIgvfApi()
 from cache import PortalCacheProps
