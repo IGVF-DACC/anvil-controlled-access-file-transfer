@@ -237,7 +237,7 @@ def collect_metadata(props: MetadataProps) -> Dict[str, Any]:
                     file_sets.add(ifs)
         if 'files' in full_fs:
             print('Getting files')
-            for f in full_fs['files']:l
+            for f in full_fs['files']:
                 if f not in files_seen:
                     full_file = requests.get(props.portal_url + f + '@@object').json()
                     files_local[f] = full_file
@@ -430,6 +430,7 @@ def make_data_tables(metadata: Dict[str, Any], destination_bucket: str, portal_u
         ]
         add_fields_to_row(full_d, DONOR_FIELDS, row, 'donors')
         donors_tsv = donors_tsv + '\n' + '\t'.join(row)
+
     return {
         'files': files_tsv,
         'file_sets': file_sets_tsv,

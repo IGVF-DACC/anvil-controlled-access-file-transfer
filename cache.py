@@ -76,7 +76,7 @@ class PortalCache:
 
 '''
 PRELOAD_SEARCHES = [
-    '/search/?type=RodentDonor',
+    '/search/?type=RodentDonor&limit=all&frame=object',
 ]
 import logging
 logging.basicConfig(level=logging.INFO)
