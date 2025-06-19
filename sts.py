@@ -308,13 +308,13 @@ def main():
         transfer_job_props.append(
             props
         )
-#        upload_tsv_to_bucket(
-#            tsv,
-#            props
-#        )
-#        create_transfer_job(props)
-#    for source_bucket, tsv in manifests.items():
-#        wait_for_transfer_job(props)
+        upload_tsv_to_bucket(
+            tsv,
+            props
+        )
+        create_transfer_job(props)
+    for source_bucket, tsv in manifests.items():
+        wait_for_transfer_job(props)
     data_tables = asyncio.run(
         make_data_tables(
             metadata,
@@ -329,13 +329,13 @@ def main():
                 'w'
         ) as f:
             f.write(tsv)
-#    upload_data_tables(
-#        session,
-#        data_tables,
-#        config['workspace_namespace'],
-#        config['workspace_name'],
-#        config['overwrite_tsvs']
-#    )
+    upload_data_tables(
+        session,
+        data_tables,
+        config['workspace_namespace'],
+        config['workspace_name'],
+        config['overwrite_tsvs']
+    )
 
 
 if __name__ == "__main__":

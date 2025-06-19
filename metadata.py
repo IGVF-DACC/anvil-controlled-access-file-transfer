@@ -37,7 +37,6 @@ AT_ID_LINKS = [
     'file_set_id',
 ]
 
-# targeted_sample_terms.term_name
 
 FILE_FIELDS = [
     'type',
