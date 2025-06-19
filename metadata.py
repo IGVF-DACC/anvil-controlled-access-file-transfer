@@ -38,7 +38,6 @@ AT_ID_LINKS = [
 ]
 
 # sequencing_platform.platform_term
-# award -> award.title?
 #' Phenotypic_feature.feature.term_name'
 # sample_terms.term_name
 # targeted_sample_terms.term_name
@@ -349,11 +348,13 @@ async def add_fields_to_row(item: Dict[str, Any], fields: List[str], row: List[A
             value = item['@type'][0]
         elif field == 'id':
             value = item['@id']
-        elif field == 'file_name':
+        elif name == 'files' and field == 'file_name':
             value = item['s3_uri'].split('/')[-1]
-        elif field == 'file_md5sum':
+        elif name == 'files' and field == 'file_md5sum':
             value = item['md5sum']
-        elif field == 'lab':
+        elif name == 'files' and field == 'reference_assembly':
+            value = item.get('assembly', '')
+        elif name == 'file_sets' and field == 'lab':
             at_id = item['lab']
             value = (
                 await portal_cache.async_batch_get(
@@ -361,7 +362,7 @@ async def add_fields_to_row(item: Dict[str, Any], fields: List[str], row: List[A
                     api,
                 )
             )[at_id]['title']
-        elif field == 'award':
+        elif name == 'file_sets' and field == 'award':
             at_id = item['award']
             value = (
                 await portal_cache.async_batch_get(
@@ -369,8 +370,6 @@ async def add_fields_to_row(item: Dict[str, Any], fields: List[str], row: List[A
                     api,
                 )
             )[at_id]['title']
-        elif name == 'files' and field == 'reference_assembly':
-            value = item.get('assembly', '')
         elif name == 'donors' and field == 'organism_type':
             value = item.get('taxa', '')
         elif name == 'donors' and field == 'phenotypic_sex':
