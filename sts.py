@@ -306,25 +306,24 @@ async def main():
         create_transfer_job(props)
     for source_bucket, tsv in manifests.items():
         wait_for_transfer_job(props)
-    data_tables = make_data_tables(
+    data_tables = await make_data_tables(
         metadata,
         config['destination_bucket'],
         PORTAL_UI_URL,
     )
-    '''
     for table_name, tsv in data_tables.items():
         with open(
                 f'igvf_anvil_{args.dul.lower().replace("-", "_")}_{table_name}.tsv',
                 'w'
         ) as f:
             f.write(tsv)
-#    upload_data_tables(
-#        session,
-#        data_tables,
-#        config['workspace_namespace'],
-#        config['workspace_name'],
-#        config['overwrite_tsvs']
-#    )
+    upload_data_tables(
+        session,
+        data_tables,
+        config['workspace_namespace'],
+        config['workspace_name'],
+        config['overwrite_tsvs']
+    )
     await async_portal_api.api_client.close()
 
 
