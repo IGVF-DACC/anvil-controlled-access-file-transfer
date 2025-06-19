@@ -37,7 +37,6 @@ AT_ID_LINKS = [
     'file_set_id',
 ]
 
-# sequencing_platform.platform_term
 #' Phenotypic_feature.feature.term_name'
 # sample_terms.term_name
 # targeted_sample_terms.term_name
@@ -385,6 +384,28 @@ async def add_fields_to_row(item: Dict[str, Any], fields: List[str], row: List[A
             value = item.get('sex', '')
         elif name == 'donors' and field == 'reported_ethnicity':
             value = item.get('ethnicities', '')
+        elif name == 'donors' and field == 'phenotypic_features':
+            at_ids = value = item.get('phenotypic_features', '')
+            if at_ids:
+                features = await portal_cache.async_batch_get(
+                    at_ids,
+                    api,
+                )
+                term_at_ids = [
+                    v['feature']
+                    for k, v in features.items()
+                    if 'feature' in v
+                ]
+                terms = await portal_cache.async_batch_get(
+                    term_at_ids,
+                    api,
+                )
+                term_names = [
+                    v['term_name']
+                    for k, v in terms.items()
+                    if 'term_name' in v
+                ]
+                value = list(sorted(set(term_names)))
         elif name == 'samples' and field == 'biosample_type':
             value = item.get('classifications', '')
         elif name == 'samples' and field == 'donor_age_at_collection_unit_upper_bound':
