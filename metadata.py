@@ -195,10 +195,11 @@ def print_summary(files_seen, file_sets_seen, samples_seen, donors_seen):
     )
 
 
+# Some AsyncIgvfApi client interals don't like running across
+# independent asyncio.run() calls.
 async def reset_async_portal_api(api: AsyncIgvfApi):
-    await api.api_client.rest_client.pool_manager.close()
     await api.api_client.close()
-    api.api_client.set_default(None)
+    api.api_client.set_default(None) # Doesn't create new session without setting this back to None.
 
 
 async def async_get_json(url):
