@@ -252,6 +252,32 @@ def get_config(dul: str, portal_cache: PortalCache) -> Dict[str, Any]:
                     '&limit=all&frame=object'
                 ),
             ]
+        },
+        'GRU': {
+            'metadata_props': MetadataProps(
+                dul='GRU',
+                initial_files_query=(
+                    'https://api.data.igvf.org/search/'
+                    '?type=File'
+                    '&file_set.data_use_limitation_summaries=GRU'
+                    '&file_set.controlled_access=true'
+                    '&status=released'
+                    '&frame=object'
+                    '&limit=all'
+                    '&file_set.@id=/analysis-sets/IGVFDS0793KZKS/'
+                ),
+                portal_cache=portal_cache,
+            ),
+            'name': 'igvf-anvil-gru',
+            'project_id': PROJECT_ID,
+            'manifest_bucket': MANIFEST_BUCKET,
+            'destination_bucket': 'Todo#############################',
+            'sleep_time_seconds': 120,
+            'workspace_namespace': 'anvil-datastorage',
+            'workspace_name': 'Todo#####################',
+            'overwrite_tsvs': False,
+            'preload_searches': [
+            ]
         }
     }
     return context[dul]
