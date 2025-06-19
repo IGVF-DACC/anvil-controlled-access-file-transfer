@@ -205,7 +205,7 @@ def print_summary(files_seen, file_sets_seen, samples_seen, donors_seen, full=Fa
         )
 
 
-def collect_metadata(props: MetadataProps) -> Dict[str, Any]:
+async def collect_metadata(props: MetadataProps) -> Dict[str, Any]:
     files_seen = set()
     files_local = {}
     samples_seen = set()
@@ -384,7 +384,7 @@ def add_fields_to_row(item, fields, row, name):
         )
 
 
-def make_data_tables(metadata: Dict[str, Any], destination_bucket: str, portal_ui_url: str) -> Dict[str, Any]:
+async def make_data_tables(metadata: Dict[str, Any], destination_bucket: str, portal_ui_url: str) -> Dict[str, Any]:
     file_headers = ['file_id', 'file_path', 'igvf_portal_url'] + FILE_FIELDS
     files_tsv = '\t'.join(file_headers)
     for f in metadata['seen']['files']:

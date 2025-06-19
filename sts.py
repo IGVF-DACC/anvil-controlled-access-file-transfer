@@ -269,7 +269,7 @@ async def main():
     metadata_props.portal_cache.preload(
         PRELOAD_SEARCHES
     )
-    metadata = collect_metadata(
+    metadata = await collect_metadata(
         metadata_props
     )
     manifests = make_sts_manifests_from_metadata(
