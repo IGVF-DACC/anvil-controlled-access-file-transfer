@@ -37,7 +37,6 @@ AT_ID_LINKS = [
     'file_set_id',
 ]
 
-# sample_terms.term_name
 # targeted_sample_terms.term_name
 
 FILE_FIELDS = [
@@ -426,6 +425,15 @@ async def add_fields_to_row(item: Dict[str, Any], fields: List[str], row: List[A
                     if 'term_name' in v
                 ]
                 value = list(sorted(set(term_names)))
+        elif name == 'samples' and field == 'targeted_sample_term':
+            at_id = value = item.get('targeted_sample_term', '')
+            if at_id:
+                value = (
+                    await portal_cache.async_batch_get(
+                        [at_id],
+                        api,
+                    )
+                )[at_id]['term_name']
         else:
             value = item.get(field, '')
         if field in AT_ID_LINKS:
