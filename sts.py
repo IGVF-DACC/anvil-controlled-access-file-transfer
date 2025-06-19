@@ -35,7 +35,6 @@ from metadata import get_session
 from metadata import post_tsv_from_memory
 from metadata import delete_table_named
 from metadata import get_name_from_tsv
-from metadata import PRELOAD_SEARCHES
 
 from cache import PortalCacheProps
 from cache import PortalCache

@@ -126,11 +126,6 @@ DONOR_FIELDS = [
 ]
 
 
-PRELOAD_SEARCHES = [
-#    '/search/?type=RodentDonor&limit=all&frame=object',
-]
-
-
 @dataclass
 class MetadataProps:
     dul: str
