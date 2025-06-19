@@ -1,8 +1,10 @@
+import asyncio
+
 import os
 
 import time
 
-from typing import Dict, List, Set
+from typing import Dict, List, Set, Any
 
 import requests
 
@@ -23,6 +25,8 @@ import logging
 
 import argparse
 
+from igvf_async_client import AsyncIgvfApi
+
 from metadata import collect_metadata
 from metadata import MetadataProps
 from metadata import make_sts_manifests_from_metadata
@@ -31,6 +35,10 @@ from metadata import get_session
 from metadata import post_tsv_from_memory
 from metadata import delete_table_named
 from metadata import get_name_from_tsv
+from metadata import PRELOAD_SEARCHES
+
+from cache import PortalCacheProps
+from cache import PortalCache
 
 parser = argparse.ArgumentParser()
 
@@ -74,7 +82,9 @@ MANIFEST_BUCKET = 'anvil-c8f2ca0'
 
 PROJECT_ID = 'igvf-anvil-controlled-access'
 
-IGVF_PORTAL_UI_URL = 'https://data.igvf.org'
+PORTAL_UI_URL = 'https://data.igvf.org'
+
+PORTAL_API_URL = 'https://api.data.igvf.org'
 
 
 @dataclass
@@ -211,39 +221,54 @@ def upload_data_tables(session, data_tables, workspace_namespace, workspace_name
         time.sleep(1)
 
 
-context = {
-    'HMB-MDS': {
-        'metadata_props': MetadataProps(
-            portal_url='https://api.data.igvf.org',
-            dul='HMB-MDS',
-            initial_files_query=(
-                'https://api.data.igvf.org/search/'
-                '?type=File'
-                '&file_set.data_use_limitation_summaries=HMB-MDS'
-                '&file_set.controlled_access=true'
-                '&status=released'
-                '&frame=object'
-                '&limit=all'
-            )
-        ),
-        'name': 'igvf-anvil-hmb-mds',
-        'project_id': PROJECT_ID,
-        'manifest_bucket': MANIFEST_BUCKET,
-        'destination_bucket': 'fc-secure-915c3459-ce08-44fc-87a8-91986d35519e',
-        'sleep_time_seconds': 120,
-        'workspace_namespace': 'anvil-datastorage',
-        'workspace_name': 'AnVIL_IGVF_HMB_MDS_R1_Staging',
-        'overwrite_tsvs': False,
+def get_config(dul: str, portal_cache: PortalCache) -> Dict[str, Any]:
+    context = {
+        'HMB-MDS': {
+            'metadata_props': MetadataProps(
+                dul='HMB-MDS',
+                initial_files_query=(
+                    'https://api.data.igvf.org/search/'
+                    '?type=File'
+                    '&file_set.data_use_limitation_summaries=HMB-MDS'
+                    '&file_set.controlled_access=true'
+                    '&status=released'
+                    '&frame=object'
+                    '&limit=all'
+                ),
+                portal_cache=portal_cache,
+            ),
+            'name': 'igvf-anvil-hmb-mds',
+            'project_id': PROJECT_ID,
+            'manifest_bucket': MANIFEST_BUCKET,
+            'destination_bucket': 'fc-secure-915c3459-ce08-44fc-87a8-91986d35519e',
+            'sleep_time_seconds': 120,
+            'workspace_namespace': 'anvil-datastorage',
+            'workspace_name': 'AnVIL_IGVF_HMB_MDS_R1_Staging',
+            'overwrite_tsvs': False,
+        }
     }
-}
+    return context[dul]
 
 
-if __name__ == '__main__':
+async def main():
     session = get_session()
     sts_client = StorageTransferServiceClient()
     storage_client = StorageClient()
-    config = context[args.dul]
+    async_portal_api = AsyncIgvfApi()
+    portal_cache = PortalCache(
+        props=PortalCacheProps(
+            url=PORTAL_API_URL,
+            async_portal_api=async_portal_api,
+        )
+    )
+    config = get_config(
+        args.dul,
+        portal_cache,
+    )
     metadata_props = config['metadata_props']
+    metadata_props.portal_cache.preload(
+        PRELOAD_SEARCHES
+    )
     metadata = collect_metadata(
         metadata_props
     )
@@ -284,7 +309,7 @@ if __name__ == '__main__':
     data_tables = make_data_tables(
         metadata,
         config['destination_bucket'],
-        IGVF_PORTAL_UI_URL,
+        PORTAL_UI_URL,
     )
     '''
     for table_name, tsv in data_tables.items():
@@ -293,11 +318,15 @@ if __name__ == '__main__':
                 'w'
         ) as f:
             f.write(tsv)
-    '''
-    upload_data_tables(
-        session,
-        data_tables,
-        config['workspace_namespace'],
-        config['workspace_name'],
-        config['overwrite_tsvs']
-    )
+#    upload_data_tables(
+#        session,
+#        data_tables,
+#        config['workspace_namespace'],
+#        config['workspace_name'],
+#        config['overwrite_tsvs']
+#    )
+    await async_portal_api.api_client.close()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
