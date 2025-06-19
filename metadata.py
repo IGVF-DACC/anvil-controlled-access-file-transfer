@@ -10,7 +10,7 @@ from io import StringIO
 
 from dataclasses import dataclass
 
-from typing import Callable, Any, Dict, Tuple
+from typing import Callable, Any, Dict, Tuple, List
 
 from google.auth import compute_engine
 from google.auth.transport.requests import AuthorizedSession
@@ -18,6 +18,8 @@ from google.auth.transport.requests import AuthorizedSession
 from cache import PortalCache
 
 import aiohttp
+
+from igvf_async_client import AsyncIgvfApi
 
 
 logger = logging.getLogger(__name__)
@@ -168,7 +170,7 @@ def post_tsv_from_memory(session, workspace_namespace, workspace_name, in_memory
         files={
             'entities': 
             (
-                'entities.tsv', 
+                'entities.tsv',
                 in_memory_tsv, 
                 'text/tab-separated-values'
             ),
@@ -191,6 +193,12 @@ def print_summary(files_seen, file_sets_seen, samples_seen, donors_seen):
             indent=4
         )
     )
+
+
+async def reset_async_portal_api(api: AsyncIgvfApi):
+    await api.api_client.rest_client.pool_manager.close()
+    await api.api_client.close()
+    api.api_client.set_default(None)
 
 
 async def async_get_json(url):
@@ -268,6 +276,7 @@ async def collect_metadata(props: MetadataProps) -> Dict[str, Any]:
             for donor in full_fs['donors']:
                 if donor not in donors_seen:
                     donors_seen.add(donor)
+    await reset_async_portal_api(async_portal_api)
     print_summary(
         files_seen,
         file_sets_seen,
@@ -333,7 +342,7 @@ def parse_accession_from_at_ids(at_ids) -> list[str]:
     ]
 
 
-def add_fields_to_row(item, fields, row, name):
+async def add_fields_to_row(item: Dict[str, Any], fields: List[str], row: List[Any], name: str, portal_cache: PortalCache, api: AsyncIgvfApi):
     for field in fields:
         value = None
         if field == 'type':
@@ -344,6 +353,14 @@ def add_fields_to_row(item, fields, row, name):
             value = item['s3_uri'].split('/')[-1]
         elif field == 'file_md5sum':
             value = item['md5sum']
+        elif field == 'lab':
+            at_id = item['lab']
+            value = (
+                await portal_cache.async_batch_get(
+                    [at_id],
+                    api,
+                )
+            )[at_id]['title']
         elif name == 'files' and field == 'reference_assembly':
             value = item.get('assembly', '')
         elif name == 'donors' and field == 'organism_type':
@@ -385,7 +402,9 @@ def add_fields_to_row(item, fields, row, name):
 
 
 async def make_data_tables(metadata: Dict[str, Any], metadata_props: MetadataProps, destination_bucket: str, portal_ui_url: str) -> Dict[str, Any]:
-    cache = metadata_props.portal_cache.local
+    portal_cache = metadata_props.portal_cache
+    api = portal_cache.props.async_portal_api()
+    cache = portal_cache.local
     file_headers = ['file_id', 'file_path', 'igvf_portal_url'] + FILE_FIELDS
     files_tsv = '\t'.join(file_headers)
     for f in metadata['seen']['files']:
@@ -398,7 +417,7 @@ async def make_data_tables(metadata: Dict[str, Any], metadata_props: MetadataPro
             ),
             portal_ui_url + full_file['@id'],
         ]
-        add_fields_to_row(full_file, FILE_FIELDS, row, 'files')
+        await add_fields_to_row(full_file, FILE_FIELDS, row, 'files', portal_cache, api)
         files_tsv = files_tsv + '\n' + '\t'.join(row)
 
     file_set_headers = ['file_set_id', 'igvf_portal_url'] + FILE_SET_FIELDS
@@ -409,7 +428,7 @@ async def make_data_tables(metadata: Dict[str, Any], metadata_props: MetadataPro
             full_fs['accession'],
             portal_ui_url + full_fs['@id'],
         ]
-        add_fields_to_row(full_fs, FILE_SET_FIELDS, row, 'file_sets')
+        await add_fields_to_row(full_fs, FILE_SET_FIELDS, row, 'file_sets', portal_cache, api)
         file_sets_tsv = file_sets_tsv + '\n' + '\t'.join(row)
 
     sample_headers = ['sample_id', 'igvf_portal_url'] + SAMPLE_FIELDS
@@ -420,7 +439,7 @@ async def make_data_tables(metadata: Dict[str, Any], metadata_props: MetadataPro
             full_s['accession'],
             portal_ui_url + full_s['@id'],
         ]
-        add_fields_to_row(full_s, SAMPLE_FIELDS, row, 'samples')
+        await add_fields_to_row(full_s, SAMPLE_FIELDS, row, 'samples', portal_cache, api)
         samples_tsv = samples_tsv + '\n' + '\t'.join(row)
 
     donor_headers = ['donor_id', 'igvf_portal_url'] + DONOR_FIELDS
@@ -431,9 +450,9 @@ async def make_data_tables(metadata: Dict[str, Any], metadata_props: MetadataPro
             full_d['accession'],
             portal_ui_url + full_d['@id'],
         ]
-        add_fields_to_row(full_d, DONOR_FIELDS, row, 'donors')
+        await add_fields_to_row(full_d, DONOR_FIELDS, row, 'donors', portal_cache, api)
         donors_tsv = donors_tsv + '\n' + '\t'.join(row)
-
+    await reset_async_portal_api(api)
     return {
         'files': files_tsv,
         'file_sets': file_sets_tsv,
