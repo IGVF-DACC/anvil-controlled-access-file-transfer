@@ -354,6 +354,15 @@ async def add_fields_to_row(item: Dict[str, Any], fields: List[str], row: List[A
             value = item['md5sum']
         elif name == 'files' and field == 'reference_assembly':
             value = item.get('assembly', '')
+        elif name == 'files' and field == 'sequencing_platform':
+            at_id = value = item.get('sequencing_platform', '')
+            if at_id:
+                value = (
+                    await portal_cache.async_batch_get(
+                        [at_id],
+                        api,
+                    )
+                )[at_id]['term_name']
         elif name == 'file_sets' and field == 'lab':
             at_id = item['lab']
             value = (
