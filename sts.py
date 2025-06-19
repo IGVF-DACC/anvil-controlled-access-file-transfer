@@ -249,7 +249,8 @@ def get_config(dul: str, portal_cache: PortalCache) -> Dict[str, Any]:
                 (
                     '/search/?type=FileSet&controlled_access=true'
                     '&data_use_limitation_summaries=HMB-MDS'
-                    '&status=released&limit=all&frame=object'
+                    '&status=released'
+                    '&limit=all&frame=object'
                 ),
             ]
         }

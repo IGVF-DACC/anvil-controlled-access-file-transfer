@@ -179,7 +179,7 @@ def post_tsv_from_memory(session, workspace_namespace, workspace_name, in_memory
         raise ValueError('Post response not 200, not continuing')
 
 
-def print_summary(files_seen, file_sets_seen, samples_seen, donors_seen, full=False):
+def print_summary(files_seen, file_sets_seen, samples_seen, donors_seen):
     print(
         json.dumps(
             {
@@ -191,18 +191,6 @@ def print_summary(files_seen, file_sets_seen, samples_seen, donors_seen, full=Fa
             indent=4
         )
     )
-    if full:
-        print(
-            json.dumps(
-                {
-                    'files': list(sorted(files_seen)),
-                    'file_sets': list(sorted(file_sets_seen)),
-                    'samples': list(sorted(samples_seen)),
-                    'donors': list(sorted(donors_seen)),
-                },
-                indent=4
-            )
-        )
 
 
 async def async_get_json(url):
