@@ -47,7 +47,7 @@ class PortalCache:
             if at_id in self.local
         ]
         logger.info(f'Found {len(cached_ids)} out of {len(at_ids)} at_ids cached')
-        results =  dict(
+        results = dict(
             await asyncio.gather(
                 *(
                     get_by_id(
