@@ -37,7 +37,6 @@ AT_ID_LINKS = [
     'file_set_id',
 ]
 
-#' Phenotypic_feature.feature.term_name'
 # sample_terms.term_name
 # targeted_sample_terms.term_name
 
@@ -414,6 +413,19 @@ async def add_fields_to_row(item: Dict[str, Any], fields: List[str], row: List[A
             value = item.get('lower_bound_age', '')
         elif name == 'samples' and field == 'donor_age_at_collection_unit':
             value = item.get('age_units', '')
+        elif name == 'samples' and field == 'sample_terms':
+            at_ids = value = item.get('sample_terms', '')
+            if at_ids:
+                sample_terms = await portal_cache.async_batch_get(
+                    at_ids,
+                    api,
+                )
+                term_names = [
+                    v['term_name']
+                    for k, v in sample_terms.items()
+                    if 'term_name' in v
+                ]
+                value = list(sorted(set(term_names)))
         else:
             value = item.get(field, '')
         if field in AT_ID_LINKS:
