@@ -2,8 +2,6 @@ import json
 
 import csv
 
-import requests
-
 import logging
 
 import time
@@ -18,6 +16,8 @@ from google.auth import compute_engine
 from google.auth.transport.requests import AuthorizedSession
 
 from cache import PortalCache
+
+import aiohttp
 
 
 logger = logging.getLogger(__name__)
@@ -131,7 +131,7 @@ DONOR_FIELDS = [
 
 
 PRELOAD_SEARCHES = [
-    '/search/?type=RodentDonor&limit=all&frame=object',
+#    '/search/?type=RodentDonor&limit=all&frame=object',
 ]
 
 
@@ -205,33 +205,47 @@ def print_summary(files_seen, file_sets_seen, samples_seen, donors_seen, full=Fa
         )
 
 
+async def async_get_json(url):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            return await response.json()
+
+
 async def collect_metadata(props: MetadataProps) -> Dict[str, Any]:
+    async_portal_api = props.portal_cache.props.async_portal_api()
     files_seen = set()
-    files_local = {}
     samples_seen = set()
-    samples_local = {}
     donors_seen = set()
-    donors_local = {}
     file_sets_seen = set()
-    file_sets_local = {}
-    files = requests.get(
-        props.initial_files_query
-    ).json()['@graph']
+    files = (
+        await async_get_json(
+            props.initial_files_query
+        )
+    )['@graph']
     for f in files:
-        files_local[f['@id']] = f
+        props.portal_cache.local[f['@id']] = f
         files_seen.add(f['@id'])
     file_sets = {
         f['file_set']
         for f in files
     }
     logger.info(f'Found {len(files)} files and {len(file_sets)} file_sets')
+    logger.info('Loading filesets into cache')
+    await props.portal_cache.async_batch_get(
+        file_sets,
+        async_portal_api,
+    )
     while file_sets:
         fs = file_sets.pop()
         if fs in file_sets_seen:
             continue
         file_sets_seen.add(fs)
-        full_fs = requests.get(props.portal_cache.props.url + fs + '@@object').json()
-        file_sets_local[fs] = full_fs
+        full_fs = (
+            await props.portal_cache.async_batch_get(
+                [fs],
+                async_portal_api,
+            )
+        )[fs]
         if 'input_file_sets' in full_fs:
             print('Getting file_sets')
             for ifs in full_fs['input_file_sets']:
@@ -239,29 +253,33 @@ async def collect_metadata(props: MetadataProps) -> Dict[str, Any]:
                     file_sets.add(ifs)
         if 'files' in full_fs:
             print('Getting files')
+            await props.portal_cache.async_batch_get(
+                full_fs['files'],
+                async_portal_api,
+            )
             for f in full_fs['files']:
                 if f not in files_seen:
-                    full_file = requests.get(props.portal_cache.props.url + f + '@@object').json()
-                    files_local[f] = full_file
                     files_seen.add(f)
         if 'samples' in full_fs:
             print('Getting samples')
-            samples = requests.get(
-                props.portal_cache.props.url + f'/search/?type=Sample&file_sets.@id={fs}&frame=object&limit=all'
-            ).json()['@graph']
+            samples = (
+                await async_get_json(
+                    props.portal_cache.props.url + f'/search/?type=Sample&file_sets.@id={fs}&frame=object&limit=all'
+                )
+            )['@graph']
             for sample in samples:
+                props.portal_cache.local[sample['@id']] = sample
                 if sample['@id'] not in samples_seen:
                     samples_seen.add(sample['@id'])
-                    samples_local[sample['@id']] = sample
         if 'donors' in full_fs:
             print('Getting donors')
+            await props.portal_cache.async_batch_get(
+                full_fs['donors'],
+                async_portal_api,
+            )
             for donor in full_fs['donors']:
                 if donor not in donors_seen:
                     donors_seen.add(donor)
-                    full_donor = requests.get(
-                        props.portal_cache.props.url + donor + '@@object'
-                    ).json()
-                    donors_local[donor] = full_donor
     print_summary(
         files_seen,
         file_sets_seen,
@@ -274,12 +292,6 @@ async def collect_metadata(props: MetadataProps) -> Dict[str, Any]:
             'file_sets': list(sorted(file_sets_seen)),
             'samples': list(sorted(samples_seen)),
             'donors': list(sorted(donors_seen)),
-        },
-        'local': {
-            'files': files_local,
-            'file_sets': file_sets_local,
-            'samples': samples_local,
-            'donors': donors_local,
         }
     }
     return metadata
@@ -294,7 +306,7 @@ def make_sts_manifests_from_metadata(metadata: Dict[str, Any], props: MetadataPr
         sorted(
             {
                 parse_s3_uri_into_bucket_and_path(
-                    metadata['local']['files'][f]['s3_uri']
+                    props.portal_cache.local[f]['s3_uri']
                 )
                 for f in metadata['seen']['files']
             }
@@ -384,11 +396,12 @@ def add_fields_to_row(item, fields, row, name):
         )
 
 
-async def make_data_tables(metadata: Dict[str, Any], destination_bucket: str, portal_ui_url: str) -> Dict[str, Any]:
+async def make_data_tables(metadata: Dict[str, Any], metadata_props: MetadataProps, destination_bucket: str, portal_ui_url: str) -> Dict[str, Any]:
+    cache = metadata_props.portal_cache.local
     file_headers = ['file_id', 'file_path', 'igvf_portal_url'] + FILE_FIELDS
     files_tsv = '\t'.join(file_headers)
     for f in metadata['seen']['files']:
-        full_file = metadata['local']['files'][f]
+        full_file = cache[f]
         row = [
             full_file['accession'],
             make_gs_file_path_from_s3_uri(
@@ -403,7 +416,7 @@ async def make_data_tables(metadata: Dict[str, Any], destination_bucket: str, po
     file_set_headers = ['file_set_id', 'igvf_portal_url'] + FILE_SET_FIELDS
     file_sets_tsv = '\t'.join(file_set_headers)
     for fs in metadata['seen']['file_sets']:
-        full_fs = metadata['local']['file_sets'][fs]
+        full_fs = cache[fs]
         row = [
             full_fs['accession'],
             portal_ui_url + full_fs['@id'],
@@ -414,7 +427,7 @@ async def make_data_tables(metadata: Dict[str, Any], destination_bucket: str, po
     sample_headers = ['sample_id', 'igvf_portal_url'] + SAMPLE_FIELDS
     samples_tsv = '\t'.join(sample_headers)
     for s in metadata['seen']['samples']:
-        full_s = metadata['local']['samples'][s]
+        full_s = cache[s]
         row = [
             full_s['accession'],
             portal_ui_url + full_s['@id'],
@@ -425,7 +438,7 @@ async def make_data_tables(metadata: Dict[str, Any], destination_bucket: str, po
     donor_headers = ['donor_id', 'igvf_portal_url'] + DONOR_FIELDS
     donors_tsv = '\t'.join(donor_headers)
     for d in metadata['seen']['donors']:
-        full_d = metadata['local']['donors'][d]
+        full_d = cache[d]
         row = [
             full_d['accession'],
             portal_ui_url + full_d['@id'],

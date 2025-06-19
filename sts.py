@@ -245,20 +245,26 @@ def get_config(dul: str, portal_cache: PortalCache) -> Dict[str, Any]:
             'workspace_namespace': 'anvil-datastorage',
             'workspace_name': 'AnVIL_IGVF_HMB_MDS_R1_Staging',
             'overwrite_tsvs': False,
+            'preload_searches': [
+                (
+                    '/search/?type=FileSet&controlled_access=true'
+                    '&data_use_limitation_summaries=HMB-MDS'
+                    '&status=released&limit=all&frame=object'
+                ),
+            ]
         }
     }
     return context[dul]
 
 
-async def main():
+def main():
     session = get_session()
     sts_client = StorageTransferServiceClient()
     storage_client = StorageClient()
-    async_portal_api = AsyncIgvfApi()
     portal_cache = PortalCache(
         props=PortalCacheProps(
             url=PORTAL_API_URL,
-            async_portal_api=async_portal_api,
+            async_portal_api=AsyncIgvfApi,
         )
     )
     config = get_config(
@@ -267,10 +273,12 @@ async def main():
     )
     metadata_props = config['metadata_props']
     metadata_props.portal_cache.preload(
-        PRELOAD_SEARCHES
+        config['preload_searches']
     )
-    metadata = await collect_metadata(
-        metadata_props
+    metadata = asyncio.run(
+        collect_metadata(
+            metadata_props
+        )
     )
     manifests = make_sts_manifests_from_metadata(
         metadata,
@@ -299,17 +307,20 @@ async def main():
         transfer_job_props.append(
             props
         )
-        upload_tsv_to_bucket(
-            tsv,
-            props
+#        upload_tsv_to_bucket(
+#            tsv,
+#            props
+#        )
+#        create_transfer_job(props)
+#    for source_bucket, tsv in manifests.items():
+#        wait_for_transfer_job(props)
+    data_tables = asyncio.run(
+        make_data_tables(
+            metadata,
+            metadata_props,
+            config['destination_bucket'],
+            PORTAL_UI_URL,
         )
-        create_transfer_job(props)
-    for source_bucket, tsv in manifests.items():
-        wait_for_transfer_job(props)
-    data_tables = await make_data_tables(
-        metadata,
-        config['destination_bucket'],
-        PORTAL_UI_URL,
     )
     for table_name, tsv in data_tables.items():
         with open(
@@ -317,15 +328,14 @@ async def main():
                 'w'
         ) as f:
             f.write(tsv)
-    upload_data_tables(
-        session,
-        data_tables,
-        config['workspace_namespace'],
-        config['workspace_name'],
-        config['overwrite_tsvs']
-    )
-    await async_portal_api.api_client.close()
+#    upload_data_tables(
+#        session,
+#        data_tables,
+#        config['workspace_namespace'],
+#        config['workspace_name'],
+#        config['overwrite_tsvs']
+#    )
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 from igvf_async_client import AsyncIgvfApi
 
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any, Tuple, Type
 
 import logging
 
@@ -17,10 +17,11 @@ async def get_by_id(api: AsyncIgvfApi, at_id: str) -> Tuple[str, Dict[str, Any]]
     r = await api.get_by_id(at_id)
     return (at_id, r.actual_instance.to_dict())
 
+
 @dataclass
 class PortalCacheProps:
     url: str
-    async_portal_api: AsyncIgvfApi
+    async_portal_api: Type[AsyncIgvfApi]
 
 
 class PortalCache:
@@ -31,6 +32,7 @@ class PortalCache:
 
     def preload(self, searches: List[str]):
         for search in searches:
+            print(f'Prefetching {search}')
             results = requests.get(
                 self.props.url + search
             ).json()['@graph']
@@ -38,7 +40,7 @@ class PortalCache:
             for result in results:
                 self.local[result['@id']] = result
 
-    async def async_batch_get(self, at_ids: List[str], load_cache: bool = True) -> Dict[str, Any]:
+    async def async_batch_get(self, at_ids: List[str], async_portal_api: AsyncIgvfApi, load_cache: bool = True) -> Dict[str, Any]:
         cached_ids = [
             at_id
             for at_id in at_ids
@@ -49,7 +51,7 @@ class PortalCache:
             await asyncio.gather(
                 *(
                     get_by_id(
-                        self.props.async_portal_api,
+                        async_portal_api,
                         at_id
                     ) for at_id in at_ids
                     if at_id not in cached_ids
