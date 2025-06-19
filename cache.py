@@ -19,7 +19,7 @@ async def get_by_id(api: AsyncIgvfApi, at_id: str) -> Tuple[str, Dict[str, Any]]
 
 @dataclass
 class PortalCacheProps:
-    base_url: str
+    url: str
     async_portal_api: AsyncIgvfApi
 
 
@@ -32,7 +32,7 @@ class PortalCache:
     def preload(self, searches: List[str]):
         for search in searches:
             results = requests.get(
-                self.props.base_url + search
+                self.props.url + search
             ).json()['@graph']
             print(f'Got {len(results)} results from {search}')
             for result in results:

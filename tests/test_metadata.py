@@ -1,14 +1,21 @@
+import asyncio
 import pytest
 
+ 
+@pytest.fixture
+async def async_portal_api():
+    from igvf_async_client import AsyncIgvfApi
+    return AsyncIgvfApi()
 
 
 @pytest.fixture
-def context():
+def context(async_portal_api):
     from metadata import MetadataProps
+    from cache import PortalCache
+    from cache import PortalCacheProps
     return {
         'SOME-DUL': {
             'metadata_props': MetadataProps(
-                portal_url='https://api.data.igvf.org',
                 dul='SOME-DUL',
                 initial_files_query=(
                     'https://api.data.igvf.org/search/'
@@ -18,6 +25,12 @@ def context():
                     '&status=released'
                     '&frame=object'
                     '&limit=all'
+                ),
+                portal_cache=PortalCache(
+                    props=PortalCacheProps(
+                        url='https://api.data.igvf.org',
+                        async_portal_api=async_portal_api,
+                    )
                 )
             ),
             'name': 'igvf-anvil-some-dul',
@@ -32,6 +45,7 @@ def context():
     }
 
 
+@pytest.mark.asyncio(scope='session')
 def test_metadata_collect_metadata(context):
     from metadata import collect_metadata
     metadata_props = context['SOME-DUL']['metadata_props']

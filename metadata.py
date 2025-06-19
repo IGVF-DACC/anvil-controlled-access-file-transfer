@@ -17,6 +17,8 @@ from typing import Callable, Any, Dict, Tuple
 from google.auth import compute_engine
 from google.auth.transport.requests import AuthorizedSession
 
+from cache import PortalCache
+
 
 logger = logging.getLogger(__name__)
 
@@ -135,9 +137,9 @@ PRELOAD_SEARCHES = [
 
 @dataclass
 class MetadataProps:
-    portal_url: str
     dul: str
     initial_files_query: str
+    portal_cache: PortalCache
 
 
 def get_session():
@@ -228,7 +230,7 @@ def collect_metadata(props: MetadataProps) -> Dict[str, Any]:
         if fs in file_sets_seen:
             continue
         file_sets_seen.add(fs)
-        full_fs = requests.get(props.portal_url + fs + '@@object').json()
+        full_fs = requests.get(props.portal_cache.props.url + fs + '@@object').json()
         file_sets_local[fs] = full_fs
         if 'input_file_sets' in full_fs:
             print('Getting file_sets')
@@ -239,13 +241,13 @@ def collect_metadata(props: MetadataProps) -> Dict[str, Any]:
             print('Getting files')
             for f in full_fs['files']:
                 if f not in files_seen:
-                    full_file = requests.get(props.portal_url + f + '@@object').json()
+                    full_file = requests.get(props.portal_cache.props.url + f + '@@object').json()
                     files_local[f] = full_file
                     files_seen.add(f)
         if 'samples' in full_fs:
             print('Getting samples')
             samples = requests.get(
-                props.portal_url + f'/search/?type=Sample&file_sets.@id={fs}&frame=object&limit=all'
+                props.portal_cache.props.url + f'/search/?type=Sample&file_sets.@id={fs}&frame=object&limit=all'
             ).json()['@graph']
             for sample in samples:
                 if sample['@id'] not in samples_seen:
@@ -257,7 +259,7 @@ def collect_metadata(props: MetadataProps) -> Dict[str, Any]:
                 if donor not in donors_seen:
                     donors_seen.add(donor)
                     full_donor = requests.get(
-                        props.portal_url + donor + '@@object'
+                        props.portal_cache.props.url + donor + '@@object'
                     ).json()
                     donors_local[donor] = full_donor
     print_summary(
@@ -382,7 +384,7 @@ def add_fields_to_row(item, fields, row, name):
         )
 
 
-def make_data_tables(metadata: Dict[str, Any], destination_bucket: str, portal_url: str) -> Dict[str, Any]:
+def make_data_tables(metadata: Dict[str, Any], destination_bucket: str, portal_ui_url: str) -> Dict[str, Any]:
     file_headers = ['file_id', 'file_path', 'igvf_portal_url'] + FILE_FIELDS
     files_tsv = '\t'.join(file_headers)
     for f in metadata['seen']['files']:
@@ -393,7 +395,7 @@ def make_data_tables(metadata: Dict[str, Any], destination_bucket: str, portal_u
                 destination_bucket,
                 full_file['s3_uri']
             ),
-            portal_url + full_file['@id'],
+            portal_ui_url + full_file['@id'],
         ]
         add_fields_to_row(full_file, FILE_FIELDS, row, 'files')
         files_tsv = files_tsv + '\n' + '\t'.join(row)
@@ -404,7 +406,7 @@ def make_data_tables(metadata: Dict[str, Any], destination_bucket: str, portal_u
         full_fs = metadata['local']['file_sets'][fs]
         row = [
             full_fs['accession'],
-            portal_url + full_fs['@id'],
+            portal_ui_url + full_fs['@id'],
         ]
         add_fields_to_row(full_fs, FILE_SET_FIELDS, row, 'file_sets')
         file_sets_tsv = file_sets_tsv + '\n' + '\t'.join(row)
@@ -415,7 +417,7 @@ def make_data_tables(metadata: Dict[str, Any], destination_bucket: str, portal_u
         full_s = metadata['local']['samples'][s]
         row = [
             full_s['accession'],
-            portal_url + full_s['@id'],
+            portal_ui_url + full_s['@id'],
         ]
         add_fields_to_row(full_s, SAMPLE_FIELDS, row, 'samples')
         samples_tsv = samples_tsv + '\n' + '\t'.join(row)
@@ -426,7 +428,7 @@ def make_data_tables(metadata: Dict[str, Any], destination_bucket: str, portal_u
         full_d = metadata['local']['donors'][d]
         row = [
             full_d['accession'],
-            portal_url + full_d['@id'],
+            portal_ui_url + full_d['@id'],
         ]
         add_fields_to_row(full_d, DONOR_FIELDS, row, 'donors')
         donors_tsv = donors_tsv + '\n' + '\t'.join(row)
