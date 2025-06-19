@@ -38,7 +38,6 @@ AT_ID_LINKS = [
 ]
 
 # sequencing_platform.platform_term
-# lab -> lab.title
 # award -> award.title?
 #' Phenotypic_feature.feature.term_name'
 # sample_terms.term_name
@@ -356,6 +355,14 @@ async def add_fields_to_row(item: Dict[str, Any], fields: List[str], row: List[A
             value = item['md5sum']
         elif field == 'lab':
             at_id = item['lab']
+            value = (
+                await portal_cache.async_batch_get(
+                    [at_id],
+                    api,
+                )
+            )[at_id]['title']
+        elif field == 'award':
+            at_id = item['award']
             value = (
                 await portal_cache.async_batch_get(
                     [at_id],
