@@ -363,13 +363,11 @@ async def add_fields_to_row(item: Dict[str, Any], fields: List[str], row: List[A
                 )
             )[at_id]['title']
         elif name == 'file_sets' and field == 'award':
-            at_id = item['award']
-            value = (
-                await portal_cache.async_batch_get(
-                    [at_id],
-                    api,
-                )
-            )[at_id]['title']
+            value = parse_accession_from_at_ids(
+                [
+                    item['award']
+                ]
+            )[0]
         elif name == 'donors' and field == 'organism_type':
             value = item.get('taxa', '')
         elif name == 'donors' and field == 'phenotypic_sex':
