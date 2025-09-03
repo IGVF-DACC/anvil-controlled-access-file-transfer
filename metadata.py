@@ -83,7 +83,7 @@ FILE_SET_FIELDS = [
     'guide_type',
     'input_file_sets',
     'lab',
-    'preferred_assay_title',
+    'preferred_assay_titles',
     'sample_summary',
     'samples',
     'scope',
