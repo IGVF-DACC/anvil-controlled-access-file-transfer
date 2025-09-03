@@ -297,10 +297,10 @@ def get_config(dul: str, portal_cache: PortalCache) -> Dict[str, Any]:
             'name': 'igvf-anvil-hmb',
             'project_id': PROJECT_ID,
             'manifest_bucket': MANIFEST_BUCKET,
-            'destination_bucket': 'Todo**************',
+            'destination_bucket': 'fc-secure-c8192a91-0c4b-4468-92eb-56394cca1331',
             'sleep_time_seconds': 120,
             'workspace_namespace': 'anvil-datastorage',
-            'workspace_name': 'Todo******************',
+            'workspace_name': 'AnVIL_IGVF_HMB_R1_Staging',
             'overwrite_tsvs': False,
             'preload_searches': [
                  (
