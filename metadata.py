@@ -50,7 +50,7 @@ FILE_FIELDS = [
     'file_md5sum',
     'file_set',
     'seqspecs',
-    'workflow',
+    'workflows',
     'derived_from',
     'reference_assembly', # 'assembly'
     'cell_type_annotation',
