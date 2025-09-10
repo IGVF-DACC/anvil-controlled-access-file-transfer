@@ -100,6 +100,7 @@ SAMPLE_FIELDS = [
     'type',
     'summary',
     'sample_terms',
+    'disease_terms',
     'modifications',
     'targeted_sample_term',
     'biosample_type', # 'classifications'
@@ -174,10 +175,10 @@ def print_summary(files_seen, file_sets_seen, samples_seen, donors_seen):
     print(
         json.dumps(
             {
-                'files': len(list(sorted(files_seen))),
-                'file_sets': len(list(sorted(file_sets_seen))),
-                'samples': len(list(sorted(samples_seen))),
-                'donors': len(list(sorted(donors_seen))),
+                'files': len(sorted(files_seen)),
+                'file_sets': len(sorted(file_sets_seen)),
+                'samples': len(sorted(samples_seen)),
+                'donors': len(sorted(donors_seen)),
             },
             indent=4
         )
@@ -275,10 +276,10 @@ async def collect_metadata(props: MetadataProps) -> Dict[str, Any]:
     )
     metadata = {
         'seen': {
-            'files': list(sorted(files_seen)),
-            'file_sets': list(sorted(file_sets_seen)),
-            'samples': list(sorted(samples_seen)),
-            'donors': list(sorted(donors_seen)),
+            'files': sorted(files_seen),
+            'file_sets': sorted(file_sets_seen),
+            'samples': sorted(samples_seen),
+            'donors': sorted(donors_seen),
         }
     }
     return metadata
@@ -289,15 +290,13 @@ def parse_s3_uri_into_bucket_and_path(s3_uri: str) -> Tuple[str, str]:
 
 
 def make_sts_manifests_from_metadata(metadata: Dict[str, Any], props: MetadataProps) -> Dict[str, Any]:
-    s3_uris = list(
-        sorted(
-            {
-                parse_s3_uri_into_bucket_and_path(
-                    props.portal_cache.local[f]['s3_uri']
-                )
-                for f in metadata['seen']['files']
-            }
-        )
+    s3_uris = sorted(
+        {
+            parse_s3_uri_into_bucket_and_path(
+                props.portal_cache.local[f]['s3_uri']
+            )
+            for f in metadata['seen']['files']
+        }
     )
     grouped_by_bucket = {}
     for bucket, path in s3_uris:
@@ -395,7 +394,7 @@ async def add_fields_to_row(item: Dict[str, Any], fields: List[str], row: List[A
                     for k, v in terms.items()
                     if 'term_name' in v
                 ]
-                value = list(sorted(set(term_names)))
+                value = sorted(set(term_names))
         elif name == 'samples' and field == 'biosample_type':
             value = item.get('classifications', '')
         elif name == 'samples' and field == 'donor_age_at_collection_unit_upper_bound':
@@ -416,7 +415,20 @@ async def add_fields_to_row(item: Dict[str, Any], fields: List[str], row: List[A
                     for k, v in sample_terms.items()
                     if 'term_name' in v
                 ]
-                value = list(sorted(set(term_names)))
+                value = sorted(set(term_names))
+        elif name == 'samples' and field == 'disease_terms':
+            at_ids = value = item.get('disease_terms', '')
+            if at_ids:
+                disease_terms = await portal_cache.async_batch_get(
+                    at_ids,
+                    api,
+                )
+                term_names = [
+                    v['term_name']
+                    for k, v in disease_terms.items()
+                    if 'term_name' in v
+                ]
+                value = sorted(set(term_names))
         elif name == 'samples' and field == 'targeted_sample_term':
             at_id = value = item.get('targeted_sample_term', '')
             if at_id:
