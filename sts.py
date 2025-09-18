@@ -324,7 +324,7 @@ def get_config(dul: str, portal_cache: PortalCache) -> Dict[str, Any]:
                 ),
                 portal_cache=portal_cache,
             ),
-            'name': 'igvf-anvil-hmb',
+            'name': 'igvf-anvil-gru-pub',
             'project_id': PROJECT_ID,
             'manifest_bucket': MANIFEST_BUCKET,
             'destination_bucket': 'fc-secure-76bef3ab-c256-49d6-ae3d-b8c9c4834098',
