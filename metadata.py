@@ -92,6 +92,7 @@ FILE_SET_FIELDS = [
     'small_scale_gene_list',
     'small_scale_loci_list',
     'summary',
+    'description',
     'targeted_genes',
 ]
 
