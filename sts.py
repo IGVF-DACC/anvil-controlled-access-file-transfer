@@ -231,7 +231,6 @@ def get_config(dul: str, portal_cache: PortalCache) -> Dict[str, Any]:
                     'https://api.data.igvf.org/search/'
                     '?type=File'
                     '&file_set.data_use_limitation_summaries=HMB-MDS'
-                    '&file_set.controlled_access=true'
                     '&status=released'
                     '&frame=object'
                     '&limit=all'
@@ -262,23 +261,27 @@ def get_config(dul: str, portal_cache: PortalCache) -> Dict[str, Any]:
                     'https://api.data.igvf.org/search/'
                     '?type=File'
                     '&file_set.data_use_limitation_summaries=GRU'
-                    '&file_set.controlled_access=true'
                     '&status=released'
                     '&frame=object'
                     '&limit=all'
-                    '&file_set.@id=/analysis-sets/IGVFDS0793KZKS/'
                 ),
                 portal_cache=portal_cache,
             ),
             'name': 'igvf-anvil-gru',
             'project_id': PROJECT_ID,
             'manifest_bucket': MANIFEST_BUCKET,
-            'destination_bucket': 'Todo#############################',
+            'destination_bucket': 'fc-secure-3123e3cc-6d9c-4867-8595-45558d34727a',
             'sleep_time_seconds': 120,
             'workspace_namespace': 'anvil-datastorage',
-            'workspace_name': 'Todo#####################',
+            'workspace_name': 'AnVIL_IGVF_GRU_R1_Staging',
             'overwrite_tsvs': False,
             'preload_searches': [
+                (
+                    '/search/?type=FileSet&controlled_access=true'
+                    '&data_use_limitation_summaries=GRU'
+                    '&status=released'
+                    '&limit=all&frame=object'
+                )
             ]
         },
         'HMB': {
