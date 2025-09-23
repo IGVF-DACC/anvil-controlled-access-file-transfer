@@ -62,6 +62,7 @@ parser.add_argument(
         'GRU',
         'HMB',
         'GRU-PUB',
+        'MOUSE',
     ],
     help='Set the data use limitation code'
 )
@@ -336,9 +337,41 @@ def get_config(dul: str, portal_cache: PortalCache) -> Dict[str, Any]:
             'workspace_name': 'AnVIL_IGVF_GRU_PUB_R1_Staging',
             'overwrite_tsvs': False,
             'preload_searches': [
-                 (
+                (
                     '/search/?type=FileSet&controlled_access=true'
                     '&data_use_limitation_summaries=GRU-PUB'
+                    '&status=released'
+                    '&limit=all&frame=object'
+                )
+            ]
+        },
+        'MOUSE': {
+            'metadata_props': MetadataProps(
+                dul='MOUSE',
+                initial_files_query=(
+                    'https://api.data.igvf.org/search/'
+                    '?type=File'
+                    '&lab.title=Ali+Mortazavi%2C+UCI'
+                    '&file_set.samples.taxa=Mus+musculus'
+                    '&status=released'
+                    '&frame=object'
+                    '&limit=all'
+                ),
+                portal_cache=portal_cache,
+            ),
+            'name': 'igvf-mouse',
+            'project_id': PROJECT_ID,
+            'manifest_bucket': MANIFEST_BUCKET,
+            'destination_bucket': 'fc-337b6f2e-b6d3-4c67-beac-16838b4a6471',
+            'sleep_time_seconds': 120,
+            'workspace_namespace': 'anvil-datastorage',
+            'workspace_name': 'AnVIL_IGVF_Mouse_R1_Staging',
+            'overwrite_tsvs': False,
+            'preload_searches': [
+                (
+                    '/search/?type=FileSet'
+                    '&donors.taxa=Mus+musculus'
+                    '&lab.title=Ali+Mortazavi%2C+UCI'
                     '&status=released'
                     '&limit=all&frame=object'
                 )
