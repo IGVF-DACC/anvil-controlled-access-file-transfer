@@ -125,6 +125,8 @@ DONOR_FIELDS = [
     'phenotypic_features',
     'phenotypic_sex', # 'sex'
     'organism_type', # 'taxa'
+    'strain', # Only mouse
+    'strain_background', # Only mouse
 ]
 
 
