@@ -351,7 +351,7 @@ def get_config(dul: str, portal_cache: PortalCache) -> Dict[str, Any]:
                 initial_files_query=(
                     'https://api.data.igvf.org/search/'
                     '?type=File'
-                    '&lab.title=Ali+Mortazavi%2C+UCI'
+                    '&file_set.lab.title=Ali+Mortazavi%2C+UCI'
                     '&file_set.samples.taxa=Mus+musculus'
                     '&status=released'
                     '&frame=object'
