@@ -35,6 +35,7 @@ AT_ID_LINKS = [
     'donors',
     'file_id',
     'file_set_id',
+    'barcode_map',
 ]
 
 
@@ -116,6 +117,7 @@ SAMPLE_FIELDS = [
     'donor_age_at_collection_unit_lower_bound', # 'lower_bound_age'
     'donor_age_at_collection_unit', # 'age_units'
     'moi',
+    'barcode_map',
 ]
 
 
@@ -258,6 +260,18 @@ async def collect_metadata(props: MetadataProps) -> Dict[str, Any]:
                 )
             )['@graph']
             for sample in samples:
+                # Crawl associated barcode map files.
+                if 'barcode_map' in sample:
+                    barcode_map_id = sample['barcode_map']
+                    barcode_file = (
+                        await props.portal_cache.async_batch_get(
+                            [barcode_map_id],
+                            async_portal_api,
+                        )
+                    )[barcode_map_id]
+                    barcode_file_set = barcode_file['file_set']
+                    if barcode_file_set not in file_sets_seen:
+                        file_sets.add(barcode_file_set)
                 props.portal_cache.local[sample['@id']] = sample
                 if sample['@id'] not in samples_seen:
                     samples_seen.add(sample['@id'])
