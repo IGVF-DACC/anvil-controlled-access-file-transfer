@@ -10,7 +10,7 @@ from io import StringIO
 
 from dataclasses import dataclass
 
-from typing import Callable, Any, Dict, Tuple, List
+from typing import Callable, Any, Dict, Tuple, List, Set
 
 from google.auth import compute_engine
 from google.auth.transport.requests import AuthorizedSession
@@ -32,6 +32,7 @@ AT_ID_LINKS = [
     'files',
     'input_file_sets',
     'samples',
+    'multiplexed_samples',
     'donors',
     'file_id',
     'file_set_id',
@@ -137,6 +138,7 @@ class MetadataProps:
     dul: str
     initial_files_query: str
     portal_cache: PortalCache
+    apply_post_filters: bool
 
 
 def get_session():
@@ -201,6 +203,69 @@ async def async_get_json(url):
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
             return await response.json()
+
+
+async def apply_post_filters(
+        props: MetadataProps,
+        metadata: Dict[str, Any]
+) -> Dict[str, Any]:
+    # Post filters
+    files_seen = set(metadata['seen']['files'])
+    file_sets_seen = set(metadata['seen']['file_sets'])
+    samples_seen = set(metadata['seen']['samples'])
+    donors_seen = set(metadata['seen']['donors'])
+    files_to_remove = set()
+    # Filter out files that already have anvil_url or aren't status released etc.
+    for f in files_seen:
+        if 'anvil_url' in props.portal_cache.local[f]:
+            files_to_remove.add(f)
+        if props.portal_cache.local[f]['status'] != 'released':
+            files_to_remove.add(f)
+    files_seen = files_seen.difference(files_to_remove)
+    # Filter out file_sets that aren't referenced by the files we're keeping.
+    file_sets_to_keep = set()
+    for f in files_seen:
+        file_sets_to_keep.add(
+             props.portal_cache.local[f]['file_set']
+        )
+    file_sets_seen = file_sets_seen.intersection(file_sets_to_keep)
+    # Filter out samples that aren't referenced by the file_sets we're keeping.
+    samples_to_keep = set()
+    for fs in file_sets_seen:
+        samples_to_keep.update(
+            props.portal_cache.local[fs].get('samples', [])
+        )
+    # Also keep the samples referenced in Samples.multiplexed_samples.
+    multiplexed_samples_to_keep = set()
+    for s in samples_to_keep:
+        multiplexed_samples_to_keep.update(
+            props.portal_cache.local[s].get('multiplexed_samples', [])
+        )
+    samples_to_keep = samples_to_keep.union(multiplexed_samples_to_keep)
+    samples_seen = samples_seen.intersection(samples_to_keep)
+    # Filter out donors that aren't referenced in the samples we're keeping.
+    donors_to_keep = set()
+    for s in samples_seen:
+        donors_to_keep.update(
+            props.portal_cache.local[s]['donors']
+        )
+    donors_seen = donors_seen.intersection(donors_to_keep)
+    print('After post filters')
+    print_summary(
+        files_seen,
+        file_sets_seen,
+        samples_seen,
+        donors_seen,
+    )
+    metadata = {
+        'seen': {
+            'files': sorted(files_seen),
+            'file_sets': sorted(file_sets_seen),
+            'samples': sorted(samples_seen),
+            'donors': sorted(donors_seen),
+        }
+    }
+    return metadata
 
 
 async def collect_metadata(props: MetadataProps) -> Dict[str, Any]:
@@ -299,6 +364,11 @@ async def collect_metadata(props: MetadataProps) -> Dict[str, Any]:
             'donors': sorted(donors_seen),
         }
     }
+    if props.apply_post_filters:
+        metadata = await apply_post_filters(
+            props,
+            metadata
+        )
     return metadata
 
 

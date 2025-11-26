@@ -68,6 +68,13 @@ parser.add_argument(
     help='Set the data use limitation code'
 )
 
+parser.add_argument(
+    '--skip-post-filters',
+    action='store_true',
+    default=False,
+    help='Skip post-processing filters'
+)
+
 args = parser.parse_args()
 
 logging.basicConfig(
@@ -224,7 +231,7 @@ def upload_data_tables(session, data_tables, workspace_namespace, workspace_name
         time.sleep(1)
 
 
-def get_config(dul: str, portal_cache: PortalCache) -> Dict[str, Any]:
+def get_config(dul: str, portal_cache: PortalCache, apply_post_filters: bool = True) -> Dict[str, Any]:
     context = {
         'HMB-MDS': {
             'metadata_props': MetadataProps(
@@ -238,6 +245,7 @@ def get_config(dul: str, portal_cache: PortalCache) -> Dict[str, Any]:
                     '&limit=all'
                 ),
                 portal_cache=portal_cache,
+                apply_post_filters=apply_post_filters,
             ),
             'name': 'igvf-anvil-hmb-mds',
             'project_id': PROJECT_ID,
@@ -268,6 +276,7 @@ def get_config(dul: str, portal_cache: PortalCache) -> Dict[str, Any]:
                     '&limit=all'
                 ),
                 portal_cache=portal_cache,
+                apply_post_filters=apply_post_filters,
             ),
             'name': 'igvf-anvil-gru',
             'project_id': PROJECT_ID,
@@ -298,6 +307,7 @@ def get_config(dul: str, portal_cache: PortalCache) -> Dict[str, Any]:
                     '&limit=all'
                 ),
                 portal_cache=portal_cache,
+                apply_post_filters=apply_post_filters,
             ),
             'name': 'igvf-anvil-hmb',
             'project_id': PROJECT_ID,
@@ -328,6 +338,7 @@ def get_config(dul: str, portal_cache: PortalCache) -> Dict[str, Any]:
                     '&limit=all'
                 ),
                 portal_cache=portal_cache,
+                apply_post_filters=apply_post_filters,
             ),
             'name': 'igvf-anvil-gru-pub',
             'project_id': PROJECT_ID,
@@ -358,6 +369,7 @@ def get_config(dul: str, portal_cache: PortalCache) -> Dict[str, Any]:
                     '&limit=all'
                 ),
                 portal_cache=portal_cache,
+                apply_post_filters=apply_post_filters,
             ),
             'name': 'igvf-anvil-gru-pub-npu',
             'project_id': PROJECT_ID,
@@ -389,6 +401,7 @@ def get_config(dul: str, portal_cache: PortalCache) -> Dict[str, Any]:
                     '&limit=all'
                 ),
                 portal_cache=portal_cache,
+                apply_post_filters=apply_post_filters,
             ),
             'name': 'igvf-mouse',
             'project_id': PROJECT_ID,
@@ -425,6 +438,7 @@ def main():
     config = get_config(
         args.dul,
         portal_cache,
+        apply_post_filters=not args.skip_post_filters,
     )
     metadata_props = config['metadata_props']
     metadata_props.portal_cache.preload(

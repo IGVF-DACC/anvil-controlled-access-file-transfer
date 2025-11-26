@@ -26,7 +26,8 @@ async def context(scope='function'):
                         url='https://api.data.igvf.org',
                         async_portal_api=AsyncIgvfApi,
                     )
-                )
+                ),
+                apply_post_filters=False,
             ),
             'name': 'igvf-anvil-some-dul',
             'project_id': 'PROJECT-123',
@@ -50,7 +51,7 @@ async def test_metadata_collect_metadata(context):
         "files": [
             "/configuration-files/IGVFFI6594MPVX/",
             "/configuration-files/IGVFFI7971ZCIE/",
-            "/matrix-files/IGVFFI8142SBEI/",
+            "/matrix-files/IGVFFI4662JCAF/",
             "/sequence-files/IGVFFI1517VBJH/",
             "/sequence-files/IGVFFI1915BHZZ/",
             "/sequence-files/IGVFFI2440LTBO/",
