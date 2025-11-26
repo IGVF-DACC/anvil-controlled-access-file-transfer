@@ -62,6 +62,7 @@ parser.add_argument(
         'GRU',
         'HMB',
         'GRU-PUB',
+        'GRU-PUB-NPU',
         'MOUSE',
     ],
     help='Set the data use limitation code'
@@ -340,6 +341,36 @@ def get_config(dul: str, portal_cache: PortalCache) -> Dict[str, Any]:
                 (
                     '/search/?type=FileSet&controlled_access=true'
                     '&data_use_limitation_summaries=GRU-PUB'
+                    '&status=released'
+                    '&limit=all&frame=object'
+                )
+            ]
+        },
+        'GRU-PUB-NPU': {
+            'metadata_props': MetadataProps(
+                dul='GRU-PUB-NPU',
+                initial_files_query=(
+                    'https://api.data.igvf.org/search/'
+                    '?type=File'
+                    '&file_set.data_use_limitation_summaries=GRU-PUB-NPU'
+                    '&status=released'
+                    '&frame=object'
+                    '&limit=all'
+                ),
+                portal_cache=portal_cache,
+            ),
+            'name': 'igvf-anvil-gru-pub-npu',
+            'project_id': PROJECT_ID,
+            'manifest_bucket': MANIFEST_BUCKET,
+            'destination_bucket': 'todoo#####',
+            'sleep_time_seconds': 120,
+            'workspace_namespace': 'anvil-datastorage',
+            'workspace_name': 'todo####',
+            'overwrite_tsvs': False,
+            'preload_searches': [
+                (
+                    '/search/?type=FileSet&controlled_access=true'
+                    '&data_use_limitation_summaries=GRU-PUB-NPU'
                     '&status=released'
                     '&limit=all&frame=object'
                 )
