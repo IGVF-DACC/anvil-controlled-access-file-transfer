@@ -64,6 +64,7 @@ parser.add_argument(
         'GRU-PUB',
         'GRU-PUB-NPU',
         'MOUSE',
+        'HUMAN',
     ],
     help='Set the data use limitation code'
 )
@@ -257,7 +258,7 @@ def get_config(dul: str, portal_cache: PortalCache, apply_post_filters: bool = T
             'overwrite_tsvs': False,
             'preload_searches': [
                 (
-                    '/search/?type=FileSet&controlled_access=true'
+                    '/search/?type=FileSet'
                     '&data_use_limitation_summaries=HMB-MDS'
                     '&status=released'
                     '&limit=all&frame=object'
@@ -288,7 +289,7 @@ def get_config(dul: str, portal_cache: PortalCache, apply_post_filters: bool = T
             'overwrite_tsvs': False,
             'preload_searches': [
                 (
-                    '/search/?type=FileSet&controlled_access=true'
+                    '/search/?type=FileSet'
                     '&data_use_limitation_summaries=GRU'
                     '&status=released'
                     '&limit=all&frame=object'
@@ -319,7 +320,7 @@ def get_config(dul: str, portal_cache: PortalCache, apply_post_filters: bool = T
             'overwrite_tsvs': False,
             'preload_searches': [
                  (
-                    '/search/?type=FileSet&controlled_access=true'
+                    '/search/?type=FileSet'
                     '&data_use_limitation_summaries=HMB'
                     '&status=released'
                     '&limit=all&frame=object'
@@ -350,7 +351,7 @@ def get_config(dul: str, portal_cache: PortalCache, apply_post_filters: bool = T
             'overwrite_tsvs': False,
             'preload_searches': [
                 (
-                    '/search/?type=FileSet&controlled_access=true'
+                    '/search/?type=FileSet'
                     '&data_use_limitation_summaries=GRU-PUB'
                     '&status=released'
                     '&limit=all&frame=object'
@@ -381,7 +382,7 @@ def get_config(dul: str, portal_cache: PortalCache, apply_post_filters: bool = T
             'overwrite_tsvs': False,
             'preload_searches': [
                 (
-                    '/search/?type=FileSet&controlled_access=true'
+                    '/search/?type=FileSet'
                     '&data_use_limitation_summaries=GRU-PUB-NPU'
                     '&status=released'
                     '&limit=all&frame=object'
@@ -394,7 +395,7 @@ def get_config(dul: str, portal_cache: PortalCache, apply_post_filters: bool = T
                 initial_files_query=(
                     'https://api.data.igvf.org/search/'
                     '?type=File'
-                    '&file_set.lab.title=Ali+Mortazavi%2C+UCI'
+                    '&lab.title!=Charles+Gersbach%2C+Duke'
                     '&file_set.samples.taxa=Mus+musculus'
                     '&status=released'
                     '&frame=object'
@@ -406,16 +407,59 @@ def get_config(dul: str, portal_cache: PortalCache, apply_post_filters: bool = T
             'name': 'igvf-mouse',
             'project_id': PROJECT_ID,
             'manifest_bucket': MANIFEST_BUCKET,
-            'destination_bucket': 'fc-337b6f2e-b6d3-4c67-beac-16838b4a6471',
+            'destination_bucket': 'todo####',
             'sleep_time_seconds': 120,
             'workspace_namespace': 'anvil-datastorage',
-            'workspace_name': 'AnVIL_IGVF_Mouse_R1_Staging',
+            'workspace_name': 'Todoo###',
             'overwrite_tsvs': False,
             'preload_searches': [
                 (
                     '/search/?type=FileSet'
                     '&donors.taxa=Mus+musculus'
-                    '&lab.title=Ali+Mortazavi%2C+UCI'
+                    '&lab.title!=Charles+Gersbach%2C+Duke'
+                    '&status=released'
+                    '&limit=all&frame=object'
+                )
+            ]
+        },
+        'HUMAN': {
+            'metadata_props': MetadataProps(
+                dul='HUMAN',
+                initial_files_query=(
+                    'https://api.data.igvf.org/search/'
+                    '?type=File'
+                    '&file_set.samples.taxa=Homo+sapiens'
+                    '&file_set.data_use_limitation_summaries=No+limitations'
+                    '&file_set.data_use_limitation_summaries=no+certificate'
+                    '&lab.title=Lea+Starita%2C+UW'
+                    '&lab.title=Doug+Fowler%2C+UW'
+                    '&lab.title=Thomas+Quertermous%2C+Stanford'
+                    '&lab.title=Karen+Mohlke%2C+UNC'
+                    '&lab.title=Ryan+Corces%2C+Gladstone+Institute+UCSF'
+                    '&lab.title=Ansuman+Satpathy%2C+Stanford'
+                    '&lab.title=Jason+Buenrostro%2C+Broad'
+                    '&lab.title=Jay+Shendure%2C+UW'
+                    '&status=released'
+                    '&frame=object'
+                    '&limit=all'
+                ),
+                portal_cache=portal_cache,
+                apply_post_filters=apply_post_filters,
+            ),
+            'name': 'igvf-human',
+            'project_id': PROJECT_ID,
+            'manifest_bucket': MANIFEST_BUCKET,
+            'destination_bucket': 'todo####',
+            'sleep_time_seconds': 120,
+            'workspace_namespace': 'anvil-datastorage',
+            'workspace_name': 'Todoo###',
+            'overwrite_tsvs': False,
+            'preload_searches': [
+                (
+                    '/search/?type=FileSet'
+                    '&donors.taxa=Homo+sapiens'
+                    '&data_use_limitation_summaries=No+limitations'
+                    '&data_use_limitation_summaries=no+certificate'
                     '&status=released'
                     '&limit=all&frame=object'
                 )

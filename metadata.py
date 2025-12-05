@@ -324,6 +324,16 @@ async def collect_metadata(props: MetadataProps) -> Dict[str, Any]:
                     props.portal_cache.props.url + f'/search/?type=Sample&file_sets.@id={fs}&frame=object&limit=all'
                 )
             )['@graph']
+            indirect_samples = [s['@id'] for s in samples]
+            print('Got indirect samples', len(indirect_samples))
+            direct_samples = set(full_fs['samples']) - set(indirect_samples)
+            if len(direct_samples) != 0:
+                print('Got direct samples!', len(direct_samples))
+                additional_samples = await props.portal_cache.async_batch_get(
+                    direct_samples,
+                    async_portal_api,
+                )
+                samples += additional_samples.values()
             for sample in samples:
                 # Crawl associated barcode map files.
                 if 'barcode_map' in sample:
