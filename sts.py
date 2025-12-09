@@ -375,10 +375,10 @@ def get_config(dul: str, portal_cache: PortalCache, apply_post_filters: bool = T
             'name': 'igvf-anvil-gru-pub-npu',
             'project_id': PROJECT_ID,
             'manifest_bucket': MANIFEST_BUCKET,
-            'destination_bucket': 'todoo#####',
+            'destination_bucket': 'fc-secure-39675bf9-15e0-4e82-970b-65d6cde1bcf7',
             'sleep_time_seconds': 120,
             'workspace_namespace': 'anvil-datastorage',
-            'workspace_name': 'todo####',
+            'workspace_name': 'AnVIL_IGVF_GRU_PUB_NPU_R1_Staging',
             'overwrite_tsvs': False,
             'preload_searches': [
                 (
@@ -407,10 +407,10 @@ def get_config(dul: str, portal_cache: PortalCache, apply_post_filters: bool = T
             'name': 'igvf-mouse',
             'project_id': PROJECT_ID,
             'manifest_bucket': MANIFEST_BUCKET,
-            'destination_bucket': 'todo####',
+            'destination_bucket': 'fc-79ea776a-c120-47b6-b4e3-0c2b8920e944',
             'sleep_time_seconds': 120,
             'workspace_namespace': 'anvil-datastorage',
-            'workspace_name': 'Todoo###',
+            'workspace_name': 'AnVIL_IGVF_Mouse_R2_Staging',
             'overwrite_tsvs': False,
             'preload_searches': [
                 (
@@ -450,10 +450,10 @@ def get_config(dul: str, portal_cache: PortalCache, apply_post_filters: bool = T
             'name': 'igvf-human',
             'project_id': PROJECT_ID,
             'manifest_bucket': MANIFEST_BUCKET,
-            'destination_bucket': 'todo####',
+            'destination_bucket': 'fc-2e061fea-ff37-4eb4-964a-630af45f7726',
             'sleep_time_seconds': 120,
             'workspace_namespace': 'anvil-datastorage',
-            'workspace_name': 'Todoo###',
+            'workspace_name': 'AnVIL_IGVF_Public_R1_Staging',
             'overwrite_tsvs': False,
             'preload_searches': [
                 (
