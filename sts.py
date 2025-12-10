@@ -431,7 +431,6 @@ def get_config(dul: str, portal_cache: PortalCache, apply_post_filters: bool = T
                     '&file_set.samples.taxa=Homo+sapiens'
                     '&file_set.data_use_limitation_summaries=No+limitations'
                     '&file_set.data_use_limitation_summaries=no+certificate'
-                    '&lab.title=Lea+Starita%2C+UW'
                     '&lab.title=Doug+Fowler%2C+UW'
                     '&lab.title=Thomas+Quertermous%2C+Stanford'
                     '&lab.title=Karen+Mohlke%2C+UNC'
