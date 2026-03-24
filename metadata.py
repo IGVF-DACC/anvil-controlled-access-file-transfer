@@ -582,6 +582,7 @@ async def make_data_tables(metadata: Dict[str, Any], metadata_props: MetadataPro
     file_sets_tsv = '\t'.join(file_set_headers)
     for fs in metadata['seen']['file_sets']:
         full_fs = cache[fs]
+        full_fs['files'] = [f for f in full_fs['files'] if f in metadata['seen']['files']] # Filter FileSet.files to only those we're including
         row = [
             full_fs['accession'],
             portal_ui_url + full_fs['@id'],
