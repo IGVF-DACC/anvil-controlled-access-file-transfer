@@ -205,6 +205,27 @@ async def async_get_json(url):
             return await response.json()
 
 
+async def get_file_sets_with_excluded_audits(props: MetadataProps) -> Set[str]:
+    # Have to do separate query to get filesets with audits, since audits aren't
+    # returned in individual get_by_id @@object calls (used by cache).
+    query = (
+        f'{props.portal_cache.props.url}'
+        '/search/?type=FileSet'
+        '&audit.WARNING.category=missing+principal+analysis'
+        '&audit.WARNING.category=missing+analysis'
+        '&field=@id&limit=all'
+    )
+    file_sets = (
+        await async_get_json(
+            query
+        )
+    )['@graph']
+    return {
+        fs['@id']
+        for fs in file_sets
+    }
+
+
 async def apply_post_filters(
         props: MetadataProps,
         metadata: Dict[str, Any]
@@ -215,11 +236,16 @@ async def apply_post_filters(
     samples_seen = set(metadata['seen']['samples'])
     donors_seen = set(metadata['seen']['donors'])
     files_to_remove = set()
-    # Filter out files that already have anvil_url or aren't status released etc.
+    file_sets_with_excluded_audits = await get_file_sets_with_excluded_audits(props)
+    # Filter out files that already have anvil_url, aren't status released,
+    # or are in filesets missing analysis/principal analysis etc.
     for f in files_seen:
         if 'anvil_url' in props.portal_cache.local[f]:
             files_to_remove.add(f)
         if props.portal_cache.local[f]['status'] != 'released':
+            files_to_remove.add(f)
+        if props.portal_cache.local[f]['file_set'] in file_sets_with_excluded_audits:
+            print('found file is excluded fs', f)
             files_to_remove.add(f)
     files_seen = files_seen.difference(files_to_remove)
     # Filter out file_sets that aren't referenced by the files we're keeping.
