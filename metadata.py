@@ -245,7 +245,7 @@ async def apply_post_filters(
         if props.portal_cache.local[f]['status'] != 'released':
             files_to_remove.add(f)
         if props.portal_cache.local[f]['file_set'] in file_sets_with_excluded_audits:
-            print('found file is excluded fs', f)
+            print('found file in excluded fs', f)
             files_to_remove.add(f)
     files_seen = files_seen.difference(files_to_remove)
     # Filter out file_sets that aren't referenced by the files we're keeping.
