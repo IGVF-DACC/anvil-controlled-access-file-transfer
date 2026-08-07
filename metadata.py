@@ -243,9 +243,14 @@ async def apply_post_filters(
         if 'anvil_url' in props.portal_cache.local[f]:
             files_to_remove.add(f)
         if props.portal_cache.local[f]['status'] != 'released':
+            print('File not released! removing', f, props.portal_cache.local[f]['status'])
+            files_to_remove.add(f)
+        if 's3_uri' not in props.portal_cache.local[f]:
+            print('S3 URI not found for file (externally hosted?), removing!', f)
             files_to_remove.add(f)
         if props.portal_cache.local[f]['file_set'] in file_sets_with_excluded_audits:
-            print('found file in excluded fs', f)
+            if f not in files_to_remove:
+                print('found file in excluded fs', f)
             files_to_remove.add(f)
     files_seen = files_seen.difference(files_to_remove)
     # Filter out file_sets that aren't referenced by the files we're keeping.
