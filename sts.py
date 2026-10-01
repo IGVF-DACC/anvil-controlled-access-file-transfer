@@ -395,7 +395,6 @@ def get_config(dul: str, portal_cache: PortalCache, apply_post_filters: bool = T
                 initial_files_query=(
                     'https://api.data.igvf.org/search/'
                     '?type=File'
-                    '&lab.title!=Charles+Gersbach%2C+Duke'
                     '&file_set.samples.taxa=Mus+musculus'
                     '&status=released'
                     '&frame=object'
@@ -416,7 +415,6 @@ def get_config(dul: str, portal_cache: PortalCache, apply_post_filters: bool = T
                 (
                     '/search/?type=FileSet'
                     '&donors.taxa=Mus+musculus'
-                    '&lab.title!=Charles+Gersbach%2C+Duke'
                     '&status=released'
                     '&limit=all&frame=object'
                 )
@@ -431,14 +429,6 @@ def get_config(dul: str, portal_cache: PortalCache, apply_post_filters: bool = T
                     '&file_set.samples.taxa=Homo+sapiens'
                     '&file_set.data_use_limitation_summaries=No+limitations'
                     '&file_set.data_use_limitation_summaries=no+certificate'
-                    '&lab.title=Doug+Fowler%2C+UW'
-                    '&lab.title=Thomas+Quertermous%2C+Stanford'
-                    '&lab.title=Karen+Mohlke%2C+UNC'
-                    '&lab.title=Ryan+Corces%2C+Gladstone+Institute+UCSF'
-                    '&lab.title=Ansuman+Satpathy%2C+Stanford'
-                    '&lab.title=Jason+Buenrostro%2C+Broad'
-                    '&lab.title=Jay+Shendure%2C+UW'
-                    '&lab.title=Guillaume+Lettre%2C+MHI'
                     '&status=released'
                     '&frame=object'
                     '&limit=all'
